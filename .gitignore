@@ -1,0 +1,67 @@
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unreal generated folders
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Plugin generated folders
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Compiled source/object files
+*.obj
+*.o
+*.so
+*.dll
+*.exe
+*.app
+*.lib
+*.a
+
+# Unreal build artifacts
+*_BuiltData.uasset
+
+# Ignore source art/raw exports
+SourceArt/
+
+# Ignore packaged builds
+*.pak
+*.ucas
+*.utoc
+
+# Ignore autosaves/logs/crashes
+Saved/Autosaves/
+Saved/Backup/
+Saved/Logs/
+Saved/Crashes/
+
+# Rider / VSCode
+.idea/
+.vscode/
+
+# Ignore Unreal content assets (code-focused repository)
+Content/
+
+# Ignore plugin content
+Plugins/*/Content/
+
+# Keep important Build files
+!Build/**/*.ico
+!Build/**/PakBlacklist*.txt
+
+# Keep essential project files
+!Config/
+!Source/
+!*.uproject
