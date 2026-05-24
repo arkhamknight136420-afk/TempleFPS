@@ -35,6 +35,7 @@ public:
 
 	virtual bool AllowsGroundedMoveStateTransitions() const;
 
+
 	virtual const char* GetStateName() const;
 
 };

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// WeaponBase.h
 
 #pragma once
 
@@ -10,62 +10,141 @@
 
 class AFPSPlayerCharacter;
 class UInventoryComponent;
+class UHealthComponent;
 
 UCLASS()
 class TEMPLEFPS_API AWeaponBase : public AActor, public IInteractionInterface
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	AWeaponBase();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Muzzle", meta = (AllowPrivateAccess = "true"))
+	USceneComponent* MuzzleLocation;
+
+public:
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void Interact_Implementation(AActor* Interactor) override;
+	virtual FString GetPromptText_Implementation() override;
+
+	UStaticMesh* GetWeaponStaticMesh() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WeaponMesh;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Attachment")
+	FName AttachSocketName = TEXT("HandGrip_R");
 
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon|Attachment")
+	FTransform ThirdPersonGripOffset;
 
-	virtual void Interact(AActor* Interactor) override;	
-
-	virtual FString GetPromptText() override;
+	UFUNCTION(BlueprintCallable)
+	virtual void TryFire();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void StartFire();
 
-	UFUNCTION(BluePrintCallable)
+	UFUNCTION(BlueprintCallable)
 	virtual void StopFire();
 
-	UFUNCTION(BluePrintCallable)
-	virtual void CanFire();
+	UFUNCTION(BlueprintCallable)
+	virtual void FireOnce();
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool CanFire() const;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload();
 
+	UFUNCTION(BlueprintCallable)
+	virtual bool CanReload() const;
 
-private:
+	UFUNCTION(BlueprintCallable)
+	virtual bool CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
-	float Damage = 20.f;	
+	UFUNCTION(BlueprintCallable)
+	virtual bool CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& OutWeaponHit);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	UFUNCTION(BlueprintCallable)
+	virtual void ResolveBulletHitResult(const FHitResult& HitResult);
+
+	
+
+protected:
+	UFUNCTION()
+	virtual void ResetFireCooldown();
+
+	UFUNCTION()
+	virtual void InsertAmmoIntoMagazine();
+
+	UFUNCTION()
+	virtual void FinishReload();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	float Damage = 20.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float FireRate = 0.25f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
-	float AmmoInMagazine = 30.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	int32 MagazineSize = 30;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
-	float AmmoInReserve = 90.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	int32 AmmoInMagazine = 30;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
-	float MaxTravelDistance = 90.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	int32 AmmoInReserve = 90;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	float MaxTravelDistance = 9000.f;
 
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Reload",
+		meta = (
+			ToolTip = "Total amount of time, in seconds, required to fully complete the reload process. This includes the full reload animation, recovery time, and the moment the weapon becomes usable again."
+			)
+	)
+	float ReloadDuration = 2.2f;
 
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Reload",
+		meta = (
+			ClampMin = "0.0",
+			ClampMax = "1.0",
+			UIMin = "0.0",
+			UIMax = "1.0",
+			ToolTip = "Normalized point during the reload where ammo is inserted into the magazine. 0.0 means ammo is inserted immediately when reload starts. 1.0 means ammo is inserted at the exact end of the reload. Example: 0.65 means ammo is inserted 65% through the reload duration."
+			)
+	)
+	float AmmoInsertNormalizedTime = 0.65f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trace")
+	float MuzzleTraceOvershootDistance = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trace")
+	TEnumAsByte<ECollisionChannel> BulletTraceChannel = ECC_GameTraceChannel2;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trace")
+	bool bBulletTraceComplex = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bCanFire = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bIsReloading = false;
+
+protected:
+	FTimerHandle FireCooldownTimerHandle;
+	FTimerHandle ReloadFinishedTimerHandle;
+	FTimerHandle AmmoInsertTimerHandle;
 };

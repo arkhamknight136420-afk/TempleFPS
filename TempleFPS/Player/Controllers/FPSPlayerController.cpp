@@ -6,6 +6,7 @@
 #include "../Bralns/FPSBrainComponent.h"
 #include "../FiniteStateMachines/MovementStates/JumpState.h"
 
+
 void AFPSPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -24,6 +25,8 @@ void AFPSPlayerController::OnPossess(APawn* InPawn)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to find FPSBrainComponent on possessed character"));
 	}
+
+	
 }
 
 void AFPSPlayerController::BeginPlay()
@@ -37,6 +40,8 @@ void AFPSPlayerController::BeginPlay()
 	{
 		SubsSystem->AddMappingContext(PlayerMappingContext, 0);
 	}
+
+	
 }
 
 void AFPSPlayerController::SetupInputComponent()
@@ -61,6 +66,11 @@ void AFPSPlayerController::SetupInputComponent()
 	if (IA_Look)
 	{
 		EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &AFPSPlayerController::Input_Look);
+	}
+
+	if (IA_Interact)
+	{
+		EnhancedInputComponent->BindAction(IA_Interact, ETriggerEvent::Started, this, &AFPSPlayerController::Input_Interact);
 	}
 
 	if (IA_SlowWalk)
@@ -99,18 +109,28 @@ void AFPSPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Started, this, &AFPSPlayerController::Input_Aim_Start);
 		EnhancedInputComponent->BindAction(IA_Aim, ETriggerEvent::Completed, this, &AFPSPlayerController::Input_Aim_End);
 	}
+	if(IA_EquipPrimary)
+	{
+		EnhancedInputComponent->BindAction(IA_EquipPrimary, ETriggerEvent::Started, this, &AFPSPlayerController::Input_EquipPrimary);
+	}
+	if(IA_EquipSecondary)
+	{
+		EnhancedInputComponent->BindAction(IA_EquipSecondary, ETriggerEvent::Started, this, &AFPSPlayerController::Input_EquipSecondary);
+	}
 }
 
 void AFPSPlayerController::Input_Move(const FInputActionValue& Value)
 {
+	const FVector2D MoveInput = Value.Get<FVector2D>();
+	UE_LOG(LogTemp, Warning, TEXT("[INPUT] Input_Move fired: X=%f Y=%f"), MoveInput.X, MoveInput.Y);
+
 	if (!PlayerBrain)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[INPUT] PlayerBrain is NULL"));
 		return;
 	}
 
-	const FVector2D MoveInput = Value.Get<FVector2D>();
 	PlayerBrain->HandleMoveInputChanged(MoveInput);
-
 }
 
 void AFPSPlayerController::Input_Look(const FInputActionValue& Value)
@@ -119,6 +139,11 @@ void AFPSPlayerController::Input_Look(const FInputActionValue& Value)
 
 	AddYawInput(LookInput.X);
 	AddPitchInput(-LookInput.Y);
+}
+
+void AFPSPlayerController::Input_Interact(const FInputActionValue& Value)
+{
+	AFPSPlayerCharacterRef->HandleInteract();
 }
 
 void AFPSPlayerController::Input_SlowWalk_Start(const FInputActionValue& Value)
@@ -213,7 +238,13 @@ void AFPSPlayerController::Input_Jump_End(const FInputActionValue& Value)
 
 void AFPSPlayerController::Input_Reload_Start(const FInputActionValue& Value)
 {
-	
+	if (!AFPSPlayerCharacterRef)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot reload."));
+		return;
+	}
+
+	AFPSPlayerCharacterRef->ReloadWeapon();
 }
 
 void AFPSPlayerController::Input_Reload_End(const FInputActionValue& Value)
@@ -223,16 +254,56 @@ void AFPSPlayerController::Input_Reload_End(const FInputActionValue& Value)
 }
 void AFPSPlayerController::Input_Shoot_Start(const FInputActionValue& Value)
 {
+	if (!AFPSPlayerCharacterRef)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot start shooting."));
+		return;
+	}
+
+	AFPSPlayerCharacterRef->StartShooting();
 }
 
 void AFPSPlayerController::Input_Shoot_End(const FInputActionValue& Value)
 {
+	if (!AFPSPlayerCharacterRef)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot stop shooting."));
+		return;
+	}
+
+	AFPSPlayerCharacterRef->StopShooting();
 }
 
 void AFPSPlayerController::Input_Aim_Start(const FInputActionValue& Value)
 {
+	AFPSPlayerCharacterRef ->StartAiming();
 }
 
 void AFPSPlayerController::Input_Aim_End(const FInputActionValue& Value)
 {
+	AFPSPlayerCharacterRef->StopAiming();
+}
+
+
+void AFPSPlayerController::Input_EquipPrimary(const FInputActionValue& Value)
+{
+	if (!AFPSPlayerCharacterRef)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot equip primary weapon."));
+		return;
+	}
+
+	AFPSPlayerCharacterRef->EquipPrimaryWeapon();
+}
+
+
+void AFPSPlayerController::Input_EquipSecondary(const FInputActionValue& Value)
+{
+	if (!AFPSPlayerCharacterRef)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot equip secondary weapon."));
+		return;
+	}
+
+	AFPSPlayerCharacterRef->EquipSecondaryWeapon();
 }

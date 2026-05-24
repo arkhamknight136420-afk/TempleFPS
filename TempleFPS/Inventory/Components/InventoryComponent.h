@@ -9,6 +9,7 @@
 class AWeaponBase;
 class APrimaryWeaponBase;
 class ASecondaryWeaponBase;
+class AFPSPlayerCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEMPLEFPS_API UInventoryComponent : public UActorComponent
@@ -30,13 +31,23 @@ protected:
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Weapons")
 	ASecondaryWeaponBase* SecondaryWeapon;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapons")
+	AWeaponBase* CurrentHeldWeapon;
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void EquipWeapon(AWeaponBase* NewWeapon);
-	
-private: 
+	void PickUpWeapon(TSubclassOf<AWeaponBase> WeaponClass);
 
+	void EquipPrimaryWeapon();	
+
+	void EquipSecondaryWeapon();
+
+	AWeaponBase* GetCurrentHeldWeapon() const { return CurrentHeldWeapon; }
+	
+
+private: 
+	
 
 };

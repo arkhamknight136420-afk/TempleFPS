@@ -33,22 +33,34 @@ void UFPSBrainComponent::BeginPlay()
 		return;
 	}
 
+	PlayerCharacterRef->BrainComponent = this;
+
+	
+
 	ChangeMovementState(NewObject<UIdleState>(this));
 
 	UE_LOG(LogFPSBrain, Log, TEXT("UFPSBrainComponent: Initializing IdleState"));
 }
-
 void UFPSBrainComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (CurrentMovementState && PlayerCharacterRef)
+	if (!CurrentMovementState)
 	{
-		CurrentMovementState->Update(PlayerCharacterRef, DeltaTime);
-		UE_LOG(LogFPSBrain, Verbose, TEXT("Current Movement State Ticking"));
+		UE_LOG(LogTemp, Error, TEXT("CurrentMovementState is NULL"));
+		return;
 	}
-}
 
+	if (!PlayerCharacterRef)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayerCharacterRef is NULL"));
+		return;
+	}
+
+	
+
+	CurrentMovementState->Update(PlayerCharacterRef, DeltaTime);
+}
 void UFPSBrainComponent::SetMoveInput(const FVector2D& MoveInput)
 {
 	CurrentMoveInput = MoveInput;
@@ -56,23 +68,26 @@ void UFPSBrainComponent::SetMoveInput(const FVector2D& MoveInput)
 
 void UFPSBrainComponent::HandleMoveInputChanged(const FVector2D& MoveInput)
 {
+	
+
 	SetMoveInput(MoveInput);
+
+
 
 	if (!CurrentMovementState->AllowsGroundedMoveStateTransitions())
 	{
-		return;
+	
 	}
 
 	if (MoveInput.IsNearlyZero())
 	{
+	
 		TryIdle();
 	}
-
 	else
 	{
 		TryWalk();
 	}
-	
 }
 
 
@@ -139,6 +154,11 @@ bool UFPSBrainComponent::TryWalk()
 
 bool UFPSBrainComponent::CanWalk()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[BRAIN] CanWalk check - IsGrounded: %d, CurrentState: %s, BufferingSlowWalk: %d"),
+		PlayerCharacterRef->IsGrounded(),
+		ANSI_TO_TCHAR(CurrentMovementState->GetStateName()),
+		BufferingSlowWalk);
+
 	if (PlayerCharacterRef->IsGrounded())
 	{
 		if (!CurrentMovementState->IsA(UCrouchState::StaticClass()))
@@ -147,18 +167,24 @@ bool UFPSBrainComponent::CanWalk()
 			{
 				if (!BufferingSlowWalk)
 				{
+					UE_LOG(LogTemp, Warning, TEXT("[BRAIN] CanWalk: TRUE"));
 					return true;
-				} else
+				}
+				else
 				{
+					UE_LOG(LogTemp, Warning, TEXT("[BRAIN] CanWalk: FALSE - BufferingSlowWalk"));
 					TrySlowWalk();
 					return false;
 				}
 			}
+			else { UE_LOG(LogTemp, Warning, TEXT("[BRAIN] CanWalk: FALSE - In SlowWalkState")); }
 		}
+		else { UE_LOG(LogTemp, Warning, TEXT("[BRAIN] CanWalk: FALSE - In CrouchState")); }
 	}
+	else { UE_LOG(LogTemp, Warning, TEXT("[BRAIN] CanWalk: FALSE - Not grounded")); }
+
 	return false;
 }
-
 bool UFPSBrainComponent::TrySlowWalk()
 {
 	if (IsCurrentState(USlowWalkState::StaticClass()))
@@ -403,4 +429,18 @@ void UFPSBrainComponent::ChangeMovementState(UBaseMovementState* NewState)
 	UE_LOG(LogMovementState, Log, TEXT("[MOVEMENT_STATE] Current Movement State Is: %s"), ANSI_TO_TCHAR(CurrentMovementState->GetStateName()));
 
 	return;
+}
+
+FName UFPSBrainComponent::GetCurrentMovementStateName() const
+{
+	if (!CurrentMovementState)
+	{
+		return TEXT("None");
+
+	}
+	else
+	{
+		return CurrentMovementState->GetStateName();
+
+	}
 }

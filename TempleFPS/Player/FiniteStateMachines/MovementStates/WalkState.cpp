@@ -4,20 +4,43 @@
 
 void UWalkState::Enter(AFPSPlayerCharacter* Character)
 {
-	Super::Enter(Character);
-
-	Character->StartWalkMovement();
+    UE_LOG(LogTemp, Warning, TEXT("[WALKSTATE] Enter called"));
+    Super::Enter(Character);
+    Character->StartWalkMovement();
 }
 
 void UWalkState::Update(AFPSPlayerCharacter* Character, float DeltaTime)
 {
 	Super::Update(Character, DeltaTime);
 
-	if (!Character || !Character->BrainComponent) return;
+	if (!Character)
+	{
+		
+		return;
+	}
 
-	Character->HandleDirectionalMovement(Character->BrainComponent->CurrentMoveInput);
+	UFPSBrainComponent* Brain = Character->BrainComponent;
+
+	if (!Brain)
+	{
+		Brain = Character->FindComponentByClass<UFPSBrainComponent>();
+
+		if (Brain)
+		{
+			Character->BrainComponent = Brain;
+			
+		}
+	}
+
+	if (!Brain)
+	{
+	
+		return;
+	}
 
 
+
+	Character->HandleDirectionalMovement(Brain->CurrentMoveInput);
 }
 
 void UWalkState::Exit(AFPSPlayerCharacter* Character)

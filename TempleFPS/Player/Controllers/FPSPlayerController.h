@@ -8,6 +8,8 @@
 
 class AFPSPlayerCharacter;
 class UFPSBrainComponent;
+
+
 /**
  *
  */
@@ -25,6 +27,8 @@ protected:
 	// Mapping Context
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input")
 	UInputMappingContext* PlayerMappingContext;
+
+	
 
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Movement")
@@ -46,6 +50,10 @@ protected:
 	UInputAction* IA_Look;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Movement")
+	UInputAction* IA_Interact;
+
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Movement")
 	UInputAction* IA_SlowWalk;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Movement")
@@ -64,7 +72,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Combat")
 	UInputAction* IA_Aim;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Combat")
+	UInputAction* IA_EquipPrimary;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Combat")
+	UInputAction* IA_EquipSecondary;
 
 	UPROPERTY(BlueprintReadOnly)
 	AFPSPlayerCharacter* AFPSPlayerCharacterRef;
@@ -86,6 +98,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void Input_Look(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void Input_Interact(const FInputActionValue& Value);
 
 	// Sprint
 	UFUNCTION(BlueprintCallable, Category = "Actions")
@@ -128,6 +143,13 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void Input_Aim_End(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void Input_EquipPrimary(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void Input_EquipSecondary(const FInputActionValue& Value);
+
 
 
 

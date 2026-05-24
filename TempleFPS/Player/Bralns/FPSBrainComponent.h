@@ -41,12 +41,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Brain")
 	AFPSPlayerCharacter* PlayerCharacterRef = nullptr;
 
-
+	UPROPERTY(BlueprintReadOnly, Category = "Brain")
 	UBaseMovementState* CurrentMovementState = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Brain")
 	UBaseMovementState* PreviousMovementState = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Input")
 	FVector2D CurrentMoveInput = FVector2D::ZeroVector;
+
+	UFUNCTION(BlueprintPure, Category = "MovementState")
+	FName GetCurrentMovementStateName() const;	
+
 
 	bool BufferingSlowWalk = false;
 

@@ -1,27 +1,34 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "AssaultRifleWeapon.h"
-#include "../../../Player/Characters/FPSPlayerCharacter.h"
-#include "../../../Inventory/Components/InventoryComponent.h"
+#include "TimerManager.h"
 
-
-
-
-void AAssaultRifleWeapon:: Interact(AActor * Interactor)
+FString AAssaultRifleWeapon::GetPromptText_Implementation()
 {
-	if (Cast<AFPSPlayerCharacter>(Interactor))
-	{
-		AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(Interactor);
-		UInventoryComponent* InventoryComponent = PlayerCharacter->FindComponentByClass<UInventoryComponent>();
-
-		InventoryComponent->EquipWeapon(this);
-
-
-	}
+	return FString(TEXT("Press E to pick up Assault Rifle"));
 }
 
-FString AAssaultRifleWeapon:: GetPromptText()
+void AAssaultRifleWeapon::StartFire()
 {
-		return FString(TEXT("Press E to pick up Assault Rifle"));
+	if (bIsTriggerHeld)
+	{
+		return;
+	}
+
+	bIsTriggerHeld = true;
+
+	TryFire();
+
+	GetWorldTimerManager().SetTimer(
+		AutomaticFireTimerHandle,
+		this,
+		&AAssaultRifleWeapon::TryFire,
+		FireRate,
+		true
+	);
+}
+
+void AAssaultRifleWeapon::StopFire()
+{
+	bIsTriggerHeld = false;
+
+	GetWorldTimerManager().ClearTimer(AutomaticFireTimerHandle);
 }
