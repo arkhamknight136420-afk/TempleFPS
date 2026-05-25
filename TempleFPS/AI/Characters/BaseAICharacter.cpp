@@ -4,12 +4,20 @@
 #include "BaseAICharacter.h"
 #include "../../ActorComponents/HealthComponent.h"
 #include "../../ActorComponents/DeathComponent.h"
+#include "../Controllers/BaseAIController.h"
+
 
 // Sets default values
 ABaseAICharacter::ABaseAICharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	AIControllerClass = ABaseAIController::StaticClass(); //set this character to be controlled by this AI controller class if there needs to be one
+
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;  // whenever this character is placed into the world or spawned automatically possess this character using
+	// the ai controller class listed above 
+
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 
