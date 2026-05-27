@@ -1,104 +1,150 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "InventoryComponent.h"
+
+#include "../../Weapons/WeaponTypes/WeaponBase.h"
 #include "../../Weapons/WeaponTypes/PrimaryWeapons/PrimaryWeaponBase.h"
 #include "../../Weapons/WeaponTypes/SecondaryWeapons/SecondaryWeaponBase.h"
+
 #include "../../Player/Characters/FPSPlayerCharacter.h"
+#include "../../AI/Characters/BaseAICharacter.h"
+
+#include "GameFramework/Character.h"
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
-
 
 // Called when the game starts
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (PrimaryWeapon)
+	if (DefaultPrimaryWeaponClass)
 	{
-		EquipPrimaryWeapon();
+		PickUpWeapon(DefaultPrimaryWeaponClass);
 	}
-	else if (SecondaryWeapon)
+	else if (DefaultSecondaryWeaponClass)
 	{
-		EquipSecondaryWeapon();
+		PickUpWeapon(DefaultSecondaryWeaponClass);
 	}
 	else
 	{
 		CurrentHeldWeapon = nullptr;
-		UE_LOG(LogTemp, Warning, TEXT("No  Weapon To Equip At Start Of Round"));
-	}
-	
-}
 
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("No default weapon assigned.")
+		);
+	}
+}
 
 // Called every frame
-void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UInventoryComponent::TickComponent(
+	float DeltaTime,
+	ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction
+)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	Super::TickComponent(
+		DeltaTime,
+		TickType,
+		ThisTickFunction
+	);
 }
 
-void UInventoryComponent::PickUpWeapon(TSubclassOf<AWeaponBase> WeaponClass)
+void UInventoryComponent::PickUpWeapon(
+	TSubclassOf<AWeaponBase> WeaponClass
+)
 {
 	if (!WeaponClass)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PickUpWeapon failed: WeaponClass is null."));
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("PickUpWeapon failed: WeaponClass is null.")
+		);
+
 		return;
 	}
 
-	AFPSPlayerCharacter* Player = Cast<AFPSPlayerCharacter>(GetOwner());
+	ACharacter* CharacterOwner = Cast<ACharacter>(GetOwner());
 
-	if (!Player)
+	if (!CharacterOwner)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PickUpWeapon failed: Inventory owner is not AFPSPlayerCharacter."));
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("PickUpWeapon failed: Inventory owner is not a Character.")
+		);
+
 		return;
 	}
 
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Player;
-	SpawnParams.Instigator = Player;
+	SpawnParams.Owner = CharacterOwner;
+	SpawnParams.Instigator = CharacterOwner;
 
-	AWeaponBase* SpawnedWeapon = GetWorld()->SpawnActor<AWeaponBase>(
-		WeaponClass,
-		Player->GetActorLocation(),
-		Player->GetActorRotation(),
-		SpawnParams
-	);
+	AWeaponBase* SpawnedWeapon =
+		GetWorld()->SpawnActor<AWeaponBase>(
+			WeaponClass,
+			CharacterOwner->GetActorLocation(),
+			CharacterOwner->GetActorRotation(),
+			SpawnParams
+		);
 
 	if (!SpawnedWeapon)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PickUpWeapon failed: Could not spawn weapon."));
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("PickUpWeapon failed: Could not spawn weapon.")
+		);
+
 		return;
 	}
 
-	SpawnedWeapon->SetOwner(Player);
+	SpawnedWeapon->SetOwner(CharacterOwner);
 	SpawnedWeapon->SetActorHiddenInGame(true);
 	SpawnedWeapon->SetActorEnableCollision(false);
 
-	if (APrimaryWeaponBase* NewPrimaryWeapon = Cast<APrimaryWeaponBase>(SpawnedWeapon))
+	if (APrimaryWeaponBase* NewPrimaryWeapon =
+		Cast<APrimaryWeaponBase>(SpawnedWeapon))
 	{
 		PrimaryWeapon = NewPrimaryWeapon;
-		UE_LOG(LogTemp, Warning, TEXT("Picked up Primary Weapon: %s"), *PrimaryWeapon->GetName());
+
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Picked up Primary Weapon: %s"),
+			*PrimaryWeapon->GetName()
+		);
+
 		EquipPrimaryWeapon();
 	}
-	else if (ASecondaryWeaponBase* NewSecondaryWeapon = Cast<ASecondaryWeaponBase>(SpawnedWeapon))
+	else if (ASecondaryWeaponBase* NewSecondaryWeapon =
+		Cast<ASecondaryWeaponBase>(SpawnedWeapon))
 	{
 		SecondaryWeapon = NewSecondaryWeapon;
-		UE_LOG(LogTemp, Warning, TEXT("Picked up Secondary Weapon: %s"), *SecondaryWeapon->GetName());
+
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Picked up Secondary Weapon: %s"),
+			*SecondaryWeapon->GetName()
+		);
+
 		EquipSecondaryWeapon();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawned weapon is not primary or secondary."));
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("Spawned weapon is not primary or secondary.")
+		);
+
 		SpawnedWeapon->Destroy();
 	}
 }
@@ -107,15 +153,25 @@ void UInventoryComponent::EquipPrimaryWeapon()
 {
 	if (!PrimaryWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Primary Weapon To Equip"));
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("No Primary Weapon To Equip")
+		);
+
 		return;
 	}
 
-	AFPSPlayerCharacter* Player = Cast<AFPSPlayerCharacter>(GetOwner());
+	ACharacter* CharacterOwner = Cast<ACharacter>(GetOwner());
 
-	if (!Player)
+	if (!CharacterOwner)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Player Character To Equip Primary Weapon To"));
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("No Character owner to equip primary weapon to.")
+		);
+
 		return;
 	}
 
@@ -128,26 +184,50 @@ void UInventoryComponent::EquipPrimaryWeapon()
 
 	CurrentHeldWeapon->SetActorHiddenInGame(false);
 	CurrentHeldWeapon->SetActorEnableCollision(false);
-	CurrentHeldWeapon->SetOwner(Player);
+	CurrentHeldWeapon->SetOwner(CharacterOwner);
 
-	Player->AttachWeaponToCharacter(CurrentHeldWeapon);
+	if (AFPSPlayerCharacter* Player =
+		Cast<AFPSPlayerCharacter>(CharacterOwner))
+	{
+		Player->AttachWeaponToCharacter(CurrentHeldWeapon);
+	}
+	else if (ABaseAICharacter* AICharacter =
+		Cast<ABaseAICharacter>(CharacterOwner))
+	{
+		AICharacter->AttachWeaponToCharacter(CurrentHeldWeapon);
+	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Equipped Primary Weapon: %s"), *PrimaryWeapon->GetName());
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("Equipped Primary Weapon: %s"),
+		*PrimaryWeapon->GetName()
+	);
 }
 
 void UInventoryComponent::EquipSecondaryWeapon()
 {
 	if (!SecondaryWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Secondary Weapon To Equip"));
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("No Secondary Weapon To Equip")
+		);
+
 		return;
 	}
 
-	AFPSPlayerCharacter* Player = Cast<AFPSPlayerCharacter>(GetOwner());
+	ACharacter* CharacterOwner = Cast<ACharacter>(GetOwner());
 
-	if (!Player)
+	if (!CharacterOwner)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Player Character To Equip Secondary Weapon To"));
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("No Character owner to equip secondary weapon to.")
+		);
+
 		return;
 	}
 
@@ -160,9 +240,23 @@ void UInventoryComponent::EquipSecondaryWeapon()
 
 	CurrentHeldWeapon->SetActorHiddenInGame(false);
 	CurrentHeldWeapon->SetActorEnableCollision(false);
-	CurrentHeldWeapon->SetOwner(Player);
+	CurrentHeldWeapon->SetOwner(CharacterOwner);
 
-	Player->AttachWeaponToCharacter(CurrentHeldWeapon);
+	if (AFPSPlayerCharacter* Player =
+		Cast<AFPSPlayerCharacter>(CharacterOwner))
+	{
+		Player->AttachWeaponToCharacter(CurrentHeldWeapon);
+	}
+	else if (ABaseAICharacter* AICharacter =
+		Cast<ABaseAICharacter>(CharacterOwner))
+	{
+		AICharacter->AttachWeaponToCharacter(CurrentHeldWeapon);
+	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Equipped Secondary Weapon: %s"), *SecondaryWeapon->GetName());
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("Equipped Secondary Weapon: %s"),
+		*SecondaryWeapon->GetName()
+	);
 }

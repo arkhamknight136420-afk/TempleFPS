@@ -52,6 +52,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UUCharacterAudioComponent* CharacterAudioComponent;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UFPSBrainComponent* BrainComponent = nullptr;
+
+	AActor* CurrentInteractableActor = nullptr;
+
+	UInventoryComponent* GetInventoryComponent() const;
 
 
 	UFUNCTION()
@@ -125,12 +131,7 @@ public:
 	void EquipSecondaryWeapon();
 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UFPSBrainComponent* BrainComponent = nullptr;
-
-	AActor* CurrentInteractableActor = nullptr;
-
-	UInventoryComponent* GetInventoryComponent() const;
+	
 
 
 protected:

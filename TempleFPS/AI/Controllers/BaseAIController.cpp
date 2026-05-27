@@ -86,6 +86,15 @@ void ABaseAIController::HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus)
 			BlackboardComponent->SetValueAsObject(TEXT("Player"), Actor);
 		}
 	}
+	else
+	{
+		BlackboardComponent->ClearValue(TEXT("Player"));	
+	}
+	
+
+	
+
+	
 	
 		 
 		

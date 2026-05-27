@@ -10,6 +10,7 @@ class AWeaponBase;
 class APrimaryWeaponBase;
 class ASecondaryWeaponBase;
 class AFPSPlayerCharacter;
+class ABaseAICharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEMPLEFPS_API UInventoryComponent : public UActorComponent
@@ -24,15 +25,18 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	// AI / starting loadout selection
+	
 
-	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly,Category = "Weapons")
-	APrimaryWeaponBase* PrimaryWeapon;
+	// Runtime weapon instances
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapons|Runtime")
+	APrimaryWeaponBase* PrimaryWeapon = nullptr;
 
-	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Weapons")
-	ASecondaryWeaponBase* SecondaryWeapon;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapons|Runtime")
+	ASecondaryWeaponBase* SecondaryWeapon = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapons")
-	AWeaponBase* CurrentHeldWeapon;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapons|Runtime")
+	AWeaponBase* CurrentHeldWeapon = nullptr;
 
 public:	
 	// Called every frame
@@ -45,6 +49,16 @@ public:
 	void EquipSecondaryWeapon();
 
 	AWeaponBase* GetCurrentHeldWeapon() const { return CurrentHeldWeapon; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons|Defaults")
+	TSubclassOf<APrimaryWeaponBase> DefaultPrimaryWeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons|Defaults")
+	TSubclassOf<ASecondaryWeaponBase> DefaultSecondaryWeaponClass;
+
+
+	
+
 	
 
 private: 
