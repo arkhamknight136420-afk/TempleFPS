@@ -8,7 +8,6 @@ class UChildActorComponent;
 class AWeaponBase;
 class UHealthComponent;
 class UDeathComponent;
-class UInventoryComponent;
 class AWeaponBase;
 
 UCLASS()
@@ -20,9 +19,8 @@ public:
 	ABaseAICharacter();
 
 	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UInventoryComponent* GetInventoryComponent() const;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UChildActorComponent* HeldWeaponComponent;
@@ -33,8 +31,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHealthComponent* HealthComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UInventoryComponent> InventoryComponent;
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UDeathComponent* DeathComponent;
@@ -59,6 +56,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	
 
 	
 

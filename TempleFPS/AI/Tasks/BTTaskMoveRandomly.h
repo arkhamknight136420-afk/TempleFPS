@@ -11,8 +11,11 @@ class TEMPLEFPS_API UBTTaskMoveRandomly : public UBTTaskNode
 
 public:
 
+
 	virtual EBTNodeResult::Type ExecuteTask(
 		UBehaviorTreeComponent& OwnerComp,
 		uint8* NodeMemory
 	) override;
+
+
 };

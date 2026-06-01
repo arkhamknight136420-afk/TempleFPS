@@ -182,9 +182,16 @@ void UInventoryComponent::EquipPrimaryWeapon()
 
 	CurrentHeldWeapon = PrimaryWeapon;
 
+	CurrentHeldWeapon->SetOwner(CharacterOwner);
 	CurrentHeldWeapon->SetActorHiddenInGame(false);
 	CurrentHeldWeapon->SetActorEnableCollision(false);
-	CurrentHeldWeapon->SetOwner(CharacterOwner);
+
+	if (UStaticMeshComponent* WeaponMesh = CurrentHeldWeapon->GetWeaponMesh())
+	{
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 
 	if (AFPSPlayerCharacter* Player =
 		Cast<AFPSPlayerCharacter>(CharacterOwner))
@@ -238,9 +245,16 @@ void UInventoryComponent::EquipSecondaryWeapon()
 
 	CurrentHeldWeapon = SecondaryWeapon;
 
+	CurrentHeldWeapon->SetOwner(CharacterOwner);
 	CurrentHeldWeapon->SetActorHiddenInGame(false);
 	CurrentHeldWeapon->SetActorEnableCollision(false);
-	CurrentHeldWeapon->SetOwner(CharacterOwner);
+
+	if (UStaticMeshComponent* WeaponMesh = CurrentHeldWeapon->GetWeaponMesh())
+	{
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 
 	if (AFPSPlayerCharacter* Player =
 		Cast<AFPSPlayerCharacter>(CharacterOwner))

@@ -3,7 +3,6 @@
 #include "../../ActorComponents/HealthComponent.h"
 #include "../../ActorComponents/DeathComponent.h"
 #include "../Controllers/BaseAIController.h"
-#include "../../Inventory/Components/InventoryComponent.h"
 #include "../../Weapons/WeaponTypes/WeaponBase.h"
 #include "Components/ChildActorComponent.h"
 
@@ -17,8 +16,7 @@ ABaseAICharacter::ABaseAICharacter()
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	DeathComponent = CreateDefaultSubobject<UDeathComponent>(TEXT("DeathComponent"));
-	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-
+	
 	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
 
 	HeldWeaponComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("HeldWeaponComponent"));
@@ -30,10 +28,7 @@ void ABaseAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!InventoryComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI InventoryComponent is NULL in BeginPlay"));
-	}
+	
 
 	if (DefaultWeaponClass)
 	{
@@ -42,7 +37,8 @@ void ABaseAICharacter::BeginPlay()
 		if (AWeaponBase* Weapon = Cast<AWeaponBase>(HeldWeaponComponent->GetChildActor()))
 		{
 			Weapon->SetOwner(this);
-			Weapon->SetActorEnableCollision(false);
+			Weapon->SetWeaponEquipped();
+			AttachWeaponToCharacter(Weapon);
 		}
 	}
 }
@@ -57,15 +53,7 @@ void ABaseAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-UInventoryComponent* ABaseAICharacter::GetInventoryComponent() const
-{
-	if (InventoryComponent)
-	{
-		return InventoryComponent.Get();
-	}
 
-	return FindComponentByClass<UInventoryComponent>();
-}
 
 void ABaseAICharacter::AttachWeaponToCharacter(AWeaponBase* WeaponToAttach)
 {
@@ -88,89 +76,36 @@ void ABaseAICharacter::AttachWeaponToCharacter(AWeaponBase* WeaponToAttach)
 
 void ABaseAICharacter::EquipPrimaryWeapon()
 {
-	UInventoryComponent* Inventory = GetInventoryComponent();
+	
 
-	if (!Inventory)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI InventoryComponent is null. Cannot equip primary weapon."));
-		return;
-	}
 
-	Inventory->EquipPrimaryWeapon();
 }
 
 void ABaseAICharacter::EquipSecondaryWeapon()
 {
-	UInventoryComponent* Inventory = GetInventoryComponent();
+	
 
-	if (!Inventory)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI InventoryComponent is null. Cannot equip secondary weapon."));
-		return;
-	}
-
-	Inventory->EquipSecondaryWeapon();
 }
 
 void ABaseAICharacter::StartShooting()
 {
-	UInventoryComponent* Inventory = GetInventoryComponent();
+	
 
-	if (!Inventory)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI InventoryComponent is null. Cannot start shooting."));
-		return;
-	}
 
-	AWeaponBase* CurrentWeapon = Inventory->GetCurrentHeldWeapon();
 
-	if (!CurrentWeapon)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no current weapon equipped. Cannot shoot."));
-		return;
-	}
-
-	CurrentWeapon->StartFire();
 }
 
 void ABaseAICharacter::StopShooting()
 {
-	UInventoryComponent* Inventory = GetInventoryComponent();
 
-	if (!Inventory)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI InventoryComponent is null. Cannot stop shooting."));
-		return;
-	}
 
-	AWeaponBase* CurrentWeapon = Inventory->GetCurrentHeldWeapon();
-
-	if (!CurrentWeapon)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no current weapon equipped. Cannot stop shooting."));
-		return;
-	}
-
-	CurrentWeapon->StopFire();
 }
 
 void ABaseAICharacter::ReloadWeapon()
 {
-	UInventoryComponent* Inventory = GetInventoryComponent();
 
-	if (!Inventory)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI InventoryComponent is null. Cannot reload."));
-		return;
-	}
 
-	AWeaponBase* CurrentWeapon = Inventory->GetCurrentHeldWeapon();
+	
 
-	if (!CurrentWeapon)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no current weapon equipped. Cannot reload."));
-		return;
-	}
-
-	CurrentWeapon->Reload();
+	
 }

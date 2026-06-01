@@ -32,7 +32,15 @@ public:
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	virtual FString GetPromptText_Implementation() override;
 
+	void SetWeaponEquipped();
+
 	UStaticMesh* GetWeaponStaticMesh() const;
+
+
+	UStaticMeshComponent* GetWeaponMesh() const
+	{
+		return WeaponMesh;
+	}
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WeaponMesh;

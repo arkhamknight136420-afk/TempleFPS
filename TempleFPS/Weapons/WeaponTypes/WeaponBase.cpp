@@ -15,11 +15,15 @@ AWeaponBase::AWeaponBase()
 	MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Muzzle"));
 	MuzzleLocation->SetupAttachment(WeaponMesh);
 
-	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	WeaponMesh->SetGenerateOverlapEvents(true);
 	WeaponMesh->SetCollisionObjectType(ECC_GameTraceChannel1);
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	WeaponMesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	WeaponMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
 
 
 }
@@ -35,6 +39,7 @@ void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
 
 void AWeaponBase::Interact_Implementation(AActor* Interactor)
 {
@@ -367,6 +372,17 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 	}
 
 	return bHit;
+}
+void AWeaponBase::SetWeaponEquipped()
+{
+	if (!WeaponMesh) return;
+
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(false);
 }
 
 void AWeaponBase::ResolveBulletHitResult(const FHitResult& HitResult)
