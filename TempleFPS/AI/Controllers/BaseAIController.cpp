@@ -89,15 +89,17 @@ void ABaseAIController::HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus)
 	else
 	{
 		BlackboardComponent->ClearValue(TEXT("Player"));	
-	}
-	
-
-	
-
-	
-	
-		 
-		
+	}	
 }
 
 
+void ABaseAIController::FocusOnTarget(AActor* TargetActor)
+{
+
+	SetFocus(TargetActor, EAIFocusPriority::Gameplay);
+}
+
+void ABaseAIController::UnfocusOnTarget()
+{
+	ClearFocus(EAIFocusPriority::Gameplay);
+}

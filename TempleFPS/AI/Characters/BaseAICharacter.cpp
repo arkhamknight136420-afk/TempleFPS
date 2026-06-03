@@ -4,6 +4,7 @@
 #include "../../ActorComponents/DeathComponent.h"
 #include "../Controllers/BaseAIController.h"
 #include "../../Weapons/WeaponTypes/WeaponBase.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Components/ChildActorComponent.h"
 
 // Sets default values
@@ -21,6 +22,12 @@ ABaseAICharacter::ABaseAICharacter()
 
 	HeldWeaponComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("HeldWeaponComponent"));
 	HeldWeaponComponent->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
+
+	bUseControllerRotationYaw = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
 	
 }
 
@@ -89,8 +96,16 @@ void ABaseAICharacter::EquipSecondaryWeapon()
 
 void ABaseAICharacter::StartShooting()
 {
-	
+	AWeaponBase* Weapon =
+		Cast<AWeaponBase>(
+			HeldWeaponComponent->GetChildActor()
+		);
 
+	if (Weapon)
+	{
+		Weapon->StartFire();
+	}
+	
 
 
 }

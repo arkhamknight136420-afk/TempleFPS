@@ -7,10 +7,9 @@
 #include "GameFramework/Character.h"
 #include "BTTask_AttackPlayer.generated.h"
 
+class ABaseAIController;
 
-/**
- * 
- */
+
 UCLASS()
 class TEMPLEFPS_API UBTTask_AttackPlayer : public UBTTaskNode
 {
@@ -38,6 +37,7 @@ protected:
 	
 		ACharacter* Player = nullptr;
 
+private:
 
 
 };

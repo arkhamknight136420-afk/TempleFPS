@@ -5,6 +5,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
+#include "../Controllers/BaseAIController.h"
+#include "../Characters/BaseAICharacter.h"
 
 
 
@@ -13,6 +15,8 @@ UBTTask_AttackPlayer::UBTTask_AttackPlayer()
 	NodeName = TEXT("Attack Player");
 
 	bNotifyTick = true;
+	bCreateNodeInstance = true;
+
 }
 
 
@@ -21,6 +25,7 @@ EBTNodeResult::Type UBTTask_AttackPlayer::ExecuteTask(
 	uint8* NodeMemory
 )
 {
+
 	UBlackboardComponent* BlackboardComponent =
 		OwnerComp.GetBlackboardComponent();
 
@@ -40,7 +45,26 @@ EBTNodeResult::Type UBTTask_AttackPlayer::ExecuteTask(
 	Player = Cast<ACharacter>(PlayerBlackboardKey);
 
 	
+
+
+
+	if (!IsValid(Player))
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	ABaseAIController* AIController = Cast<ABaseAIController>(OwnerComp.GetAIOwner());
+
+	if (!IsValid(AIController))
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	AIController->FocusOnTarget(Player);
+	
 	return EBTNodeResult::InProgress;
+
+
 }
 
 void UBTTask_AttackPlayer::TickTask(
@@ -49,33 +73,42 @@ void UBTTask_AttackPlayer::TickTask(
 	float DeltaSeconds
 )
 {
-	FVector PlayerLoc = Player->GetActorLocation();
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 
-	AAIController* AIController = OwnerComp.GetAIOwner();
-
-	if (!AIController)
+	if (!BlackboardComponent)
 	{
-		FinishLatentTask(
-			OwnerComp,
-			EBTNodeResult::Failed
-		);
-
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
 
-	APawn* AIPawn = AIController->GetPawn();
+	UObject* CurrentPlayerKey =
+		BlackboardComponent->GetValueAsObject(TEXT("Player"));
 
-	if (!AIPawn)
+	if (!IsValid(CurrentPlayerKey))
 	{
-		FinishLatentTask(
-			OwnerComp,
-			EBTNodeResult::Failed
-		);
+		if (ABaseAIController* AIController = Cast<ABaseAIController>(OwnerComp.GetAIOwner()))
+		{
+			AIController->UnfocusOnTarget();
+		}
 
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
 
-	FVector AICharacterLoc = AIPawn->GetActorLocation();
+	if (ABaseAICharacter* AICharacter = Cast<ABaseAICharacter>(OwnerComp.GetAIOwner()->GetPawn()))
+	{
+		AICharacter->StartShooting();
+		FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
+		return;
+
+	}
+	else
+	{
+		AICharacter->StopShooting();
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return;
+
+	}
 
 
 }

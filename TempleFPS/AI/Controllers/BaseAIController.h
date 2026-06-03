@@ -18,6 +18,13 @@ class TEMPLEFPS_API ABaseAIController : public AAIController
 public:
 	ABaseAIController();
 
+
+	UFUNCTION()
+	void FocusOnTarget(AActor* TargetActor);
+
+	UFUNCTION()
+	void UnfocusOnTarget();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
@@ -41,6 +48,10 @@ protected:
 
 	UFUNCTION()
 	void HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus /*Passing in a copy of the data  not a pointer or reference*/);
+
+	
+
+
 
 private:
 
