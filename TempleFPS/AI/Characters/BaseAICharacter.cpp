@@ -5,6 +5,7 @@
 #include "../Controllers/BaseAIController.h"
 #include "../../Weapons/WeaponTypes/WeaponBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "../../Characters/BaseCharacter.h"
 #include "Components/ChildActorComponent.h"
 
 // Sets default values
@@ -28,6 +29,7 @@ ABaseAICharacter::ABaseAICharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
+	EyesLocation->SetRelativeLocation(FVector(0.f, 0.f, 75.f));
 	
 }
 

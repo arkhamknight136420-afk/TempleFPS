@@ -4,6 +4,8 @@
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
 #include "../../ActorComponents/HealthComponent.h"
+#include "../../Characters/BaseCharacter.h"
+
 
 AWeaponBase::AWeaponBase()
 {
@@ -248,26 +250,26 @@ void AWeaponBase::FinishReload()
 
 bool AWeaponBase::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint)
 { 
-	AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner()); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+	ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(GetOwner()); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 
-	if (!PlayerCharacter) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+	if (!BaseCharacter) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	{
 		UE_LOG(LogTemp, Error, TEXT("[PLAYER TRACE] Failed: Weapon has no valid AFPSPlayerCharacter owner."));
 		return false;
 	}
 
-	if (!PlayerCharacter->PlayerCamera) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+	if (!BaseCharacter->EyesLocation) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	{
-		UE_LOG(LogTemp, Error, TEXT("[PLAYER TRACE] Failed: PlayerCamera is null."));
+		UE_LOG(LogTemp, Error, TEXT("[PLAYER TRACE] Failed: EyesLocation is null."));
 		return false;
 	}
 
-	const FVector StartLocation = PlayerCharacter->PlayerCamera->GetComponentLocation(); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
-	const FVector EndLocation = StartLocation + PlayerCharacter->PlayerCamera->GetForwardVector() * MaxTravelDistance; // HERE HERE HERE HERE HERE HERE HERE HERE 
+	const FVector StartLocation = BaseCharacter->EyesLocation->GetComponentLocation(); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+	const FVector EndLocation = StartLocation + BaseCharacter->EyesLocation->GetForwardVector() * MaxTravelDistance; // HERE HERE HERE HERE HERE HERE HERE HERE 
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	QueryParams.AddIgnoredActor(PlayerCharacter); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+	QueryParams.AddIgnoredActor(BaseCharacter); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	QueryParams.bTraceComplex = bBulletTraceComplex;
 
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(
@@ -319,7 +321,7 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 		return false;
 	}
 
-	AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner());  // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+	ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(GetOwner());  // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 
 	const FVector StartLocation = MuzzleLocation->GetComponentLocation();
 	const FVector Direction = (AimPoint - StartLocation).GetSafeNormal();
@@ -329,9 +331,9 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.bTraceComplex = bBulletTraceComplex;
 
-	if (PlayerCharacter) // HERE
+	if (BaseCharacter) // HERE
 	{
-		QueryParams.AddIgnoredActor(PlayerCharacter); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
+		QueryParams.AddIgnoredActor(BaseCharacter); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	}
 
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(

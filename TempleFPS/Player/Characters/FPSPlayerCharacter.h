@@ -5,6 +5,7 @@
 #include "InputActionValue.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "../../Characters/BaseCharacter.h"
 #include "FPSPlayerCharacter.generated.h"
 
 class UBaseMovementState;
@@ -17,7 +18,7 @@ class UDeathComponent;
 class UUCharacterAudioComponent;
 
 UCLASS()
-class TEMPLEFPS_API AFPSPlayerCharacter : public ACharacter
+class TEMPLEFPS_API AFPSPlayerCharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
 

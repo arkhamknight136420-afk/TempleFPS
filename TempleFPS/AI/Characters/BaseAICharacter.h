@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../../Characters/BaseCharacter.h"
 #include "BaseAICharacter.generated.h"
 
 class UChildActorComponent;
@@ -11,7 +12,7 @@ class UDeathComponent;
 class AWeaponBase;
 
 UCLASS()
-class TEMPLEFPS_API ABaseAICharacter : public ACharacter
+class TEMPLEFPS_API ABaseAICharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
 

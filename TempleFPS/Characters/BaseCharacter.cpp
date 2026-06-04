@@ -2,12 +2,17 @@
 
 
 #include "BaseCharacter.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	EyesLocation = CreateDefaultSubobject<USceneComponent>(TEXT("EyesLocation"));
+	EyesLocation->SetupAttachment(GetCapsuleComponent());
+
 
 }
 

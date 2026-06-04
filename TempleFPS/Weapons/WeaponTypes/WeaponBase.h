@@ -9,6 +9,7 @@
 #include "WeaponBase.generated.h"
 
 class AFPSPlayerCharacter;
+class ABaseCharacter;
 class UInventoryComponent;
 class UHealthComponent;
 

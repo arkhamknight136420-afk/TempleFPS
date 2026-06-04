@@ -9,6 +9,7 @@
 #include "../../ActorComponents/HealthComponent.h"
 #include "../../ActorComponents/DeathComponent.h"
 #include "../../ActorComponents/UCharacterAudioComponent.h"
+#include "../../Characters/BaseCharacter.h"
 
 AFPSPlayerCharacter::AFPSPlayerCharacter()
 {
@@ -25,8 +26,6 @@ AFPSPlayerCharacter::AFPSPlayerCharacter()
 	SpringArmComponent->TargetArmLength = 300.0f;
 	SpringArmComponent->bUsePawnControlRotation = true;
 	SpringArmComponent->SocketOffset = FVector(0.f, 70.f, 50.f);
-	SpringArmComponent->bEnableCameraLag = true;
-	SpringArmComponent->CameraLagSpeed = 12.f;
 
 
 
@@ -54,10 +53,14 @@ AFPSPlayerCharacter::AFPSPlayerCharacter()
 	InteractionCapsule->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionCapsule->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
 	InteractionCapsule->SetRelativeLocation(
-		FVector(SpringArmComponent->TargetArmLength + InteractionCapsule->GetScaledCapsuleHalfHeight(), 0.f, 0.f)
+		FVector(SpringArmComponent->TargetArmLength + InteractionCapsule->GetScaledCapsuleHalfHeight() + 60.f, 0.f, 0.f)
 	);
 	InteractionCapsule->SetRelativeRotation(FRotator(-90, 0, 0));
+	InteractionCapsule->SetCapsuleHalfHeight(125.f);
+	InteractionCapsule->SetCapsuleRadius(25.f);
 
+	EyesLocation->SetupAttachment(PlayerCamera);
+	EyesLocation->SetRelativeLocation(FVector(300.f, 0.f, 0.f));
 	
 
 	
