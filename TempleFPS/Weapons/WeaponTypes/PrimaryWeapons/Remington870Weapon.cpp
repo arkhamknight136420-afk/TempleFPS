@@ -61,45 +61,28 @@ void ARemington870Weapon::FireOnce()
 	ResolveBulletHitResults(PelletHitResults);
 
 
-	/*
-	FHitResult PlayerHit;
-	FVector AimPoint;
-
-	 const bool bPlayerTraceHit = CreatePlayerBulletTrace(PlayerHit, AimPoint);
-
-	FHitResult WeaponHit;
-	// const bool bWeaponTraceHit = CreateWeaponBulletTrace(AimPoint, WeaponHit);
-
-    if (bWeaponTraceHit)
-	{
-		ResolveBulletHitResult(WeaponHit);
-	}
-	else if (bPlayerTraceHit)
-	{
-		ResolveBulletHitResult(PlayerHit);
-	}
-	*/
+	
 }
 
 bool ARemington870Weapon::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint)
 {
-	AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner());
+	AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner()); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 
-	if (!PlayerCharacter)
+	if (!PlayerCharacter) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	{
 		UE_LOG(LogTemp, Error, TEXT("[PLAYER TRACE] Failed: Weapon has no valid AFPSPlayerCharacter owner."));
 		return false;
 	}
 
-	if (!PlayerCharacter->PlayerCamera)
+	if (!PlayerCharacter->PlayerCamera) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	{
 		UE_LOG(LogTemp, Error, TEXT("[PLAYER TRACE] Failed: PlayerCamera is null."));
 		return false;
 	}
 
-	const FVector StartLocation = PlayerCharacter->PlayerCamera->GetComponentLocation();
+	const FVector StartLocation = PlayerCharacter->PlayerCamera->GetComponentLocation(); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	
-	FVector ShotDirection = PlayerCharacter->PlayerCamera->GetForwardVector();
+	FVector ShotDirection = PlayerCharacter->PlayerCamera->GetForwardVector(); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 
 	FRotator SpreadRotation = CreateRandomSpread();
 
@@ -109,7 +92,7 @@ bool ARemington870Weapon::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVec
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	QueryParams.AddIgnoredActor(PlayerCharacter);
+	QueryParams.AddIgnoredActor(PlayerCharacter); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	QueryParams.bTraceComplex = bBulletTraceComplex;
 
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(
@@ -161,7 +144,7 @@ bool ARemington870Weapon::CreateWeaponBulletTrace(const FVector& AimPoint, FHitR
 		return false;
 	}
 
-	AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner());
+	AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner()); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 
 	const FVector StartLocation = MuzzleLocation->GetComponentLocation();
 	const FVector Direction = (AimPoint - StartLocation).GetSafeNormal();
@@ -171,7 +154,7 @@ bool ARemington870Weapon::CreateWeaponBulletTrace(const FVector& AimPoint, FHitR
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.bTraceComplex = bBulletTraceComplex;
 
-	if (PlayerCharacter)
+	if (PlayerCharacter) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 	{
 		QueryParams.AddIgnoredActor(PlayerCharacter);
 	}
