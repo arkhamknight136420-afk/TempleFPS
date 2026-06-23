@@ -3,6 +3,9 @@
 
 #include "HealthComponent.h"
 #include "DeathComponent.h"
+#include "../AI/Characters/BaseAICharacter.h"
+#include "../AI/Controllers/BaseAIController.h"
+
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -10,6 +13,7 @@ UHealthComponent::UHealthComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+
 
 	
 }
@@ -44,10 +48,27 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::ApplyDamage(float InputDamageAmount)
 {
-	if (bIsDead)
+	UE_LOG(LogTemp, Warning, TEXT("ApplyDamage called on owner: %s"),
+		GetOwner() ? *GetOwner()->GetName() : TEXT("NULL"));
+	if (bIsDead) return;
+
+	CurrentHealth -= InputDamageAmount;
+
+	UE_LOG(LogTemp, Warning, TEXT("%s took %f damage, current health is %f"),
+		*GetOwner()->GetName(), InputDamageAmount, CurrentHealth);
+
+	if (ABaseAICharacter* AICharacterRef = Cast<ABaseAICharacter>(GetOwner()))
 	{
-		return;
-	}	
+		UE_LOG(LogTemp, Warning, TEXT("Owner is an AI Character"));
+
+		if (ABaseAIController* AIControllerRef = Cast<ABaseAIController>(AICharacterRef->GetController()))
+		{
+			AIControllerRef->SetPlayerBlackBoardKey();
+
+			UE_LOG(LogTemp, Warning, TEXT("Set PlayerBlackBoardKey on AI Controller"));
+		}
+	}
+
 	if (CurrentHealth <= 0.f)
 	{
 		if (DeathComponent)
@@ -57,16 +78,11 @@ void UHealthComponent::ApplyDamage(float InputDamageAmount)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("HealthComponent on %s has no reference to DeathComponent"), *GetOwner()->GetName());
+			UE_LOG(LogTemp, Error, TEXT("HealthComponent on %s has no reference to DeathComponent"),
+				*GetOwner()->GetName());
 		}
 	}
-	else
-	{
-		CurrentHealth = CurrentHealth - InputDamageAmount;
-		UE_LOG(LogTemp, Warning, TEXT("%s took %f damage, current health is %f"), *GetOwner()->GetName(), InputDamageAmount, CurrentHealth);
-	}
 }
-
 void UHealthComponent::AddHealth(float InputHealthAmount)
 {
 

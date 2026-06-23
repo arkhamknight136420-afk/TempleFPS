@@ -103,3 +103,13 @@ void ABaseAIController::UnfocusOnTarget()
 {
 	ClearFocus(EAIFocusPriority::Gameplay);
 }
+
+void ABaseAIController::SetPlayerBlackBoardKey()
+{
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+
+	if (PlayerPawn)
+	{
+		BlackboardComponent->SetValueAsObject(TEXT("Player"), PlayerPawn);
+	}
+}

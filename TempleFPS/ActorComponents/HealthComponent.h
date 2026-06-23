@@ -7,6 +7,9 @@
 #include "HealthComponent.generated.h"
 
 class UDeathComponent;
+class ABaseAICharacter;
+class ABaseAIController;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEMPLEFPS_API UHealthComponent : public UActorComponent
 {

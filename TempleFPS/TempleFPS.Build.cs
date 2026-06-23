@@ -16,7 +16,8 @@ public class TempleFPS : ModuleRules
             "InputCore",
             "EnhancedInput",
             "AIModule",
-            "NavigationSystem"
+            "NavigationSystem",
+            "Niagara"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]

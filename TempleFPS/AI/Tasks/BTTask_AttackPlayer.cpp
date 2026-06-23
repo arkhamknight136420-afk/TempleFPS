@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "../Controllers/BaseAIController.h"
 #include "../Characters/BaseAICharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 
@@ -97,18 +98,28 @@ void UBTTask_AttackPlayer::TickTask(
 
 	if (ABaseAICharacter* AICharacter = Cast<ABaseAICharacter>(OwnerComp.GetAIOwner()->GetPawn()))
 	{
-		AICharacter->StartShooting();
-		FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
-		return;
+		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(AICharacter->GetActorLocation(), Player->GetActorLocation());
+		FRotator CurrentRot = AICharacter->GetActorRotation();
 
-	}
-	else
-	{
-		AICharacter->StopShooting();
-		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-		return;
+		FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(LookAtRot, CurrentRot);
 
+		float AbsYawDelta = FMath::Abs(DeltaRot.Yaw);
+
+		if (AbsYawDelta <= LookAtYawTolerance)
+		{
+			AICharacter->StartShooting();
+			return;
+		}
+		else
+		{
+			AICharacter->StopShooting();
+			return;
+		}
 	}
+
+
+
+	
 
 
 }

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
 #include "GameFramework/Character.h"
-#include "BTTask_AttackPlayer.generated.h"
+#include "BTTask_AttackPlayer.generated.h" 
 
 class ABaseAIController;
 
@@ -32,10 +32,13 @@ protected:
 		float DeltaSeconds
 	) override;
 
+	bool bIsWithinLookRange = false;
 
-
+	float LookAtYawTolerance = 30.f;
 	
 		ACharacter* Player = nullptr;
+
+
 
 private:
 

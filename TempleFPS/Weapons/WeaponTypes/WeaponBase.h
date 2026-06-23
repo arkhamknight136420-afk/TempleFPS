@@ -8,10 +8,13 @@
 #include "../../InteractionInterface.h"
 #include "WeaponBase.generated.h"
 
+
+
 class AFPSPlayerCharacter;
 class ABaseCharacter;
 class UInventoryComponent;
 class UHealthComponent;
+class UNiagaraSystem;
 
 UCLASS()
 class TEMPLEFPS_API AWeaponBase : public AActor, public IInteractionInterface
@@ -94,7 +97,7 @@ protected:
 	UFUNCTION()
 	virtual void FinishReload();
 
-protected:
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float Damage = 20.f;
 
@@ -152,8 +155,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	bool bIsReloading = false;
 
-protected:
+
 	FTimerHandle FireCooldownTimerHandle;
 	FTimerHandle ReloadFinishedTimerHandle;
 	FTimerHandle AmmoInsertTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
+	UNiagaraSystem* MuzzleFlashEffect;
+
+	UFUNCTION(BlueprintCallable, Category = "VFX")
+	void PlayMuzzleFlashEffect();
 };

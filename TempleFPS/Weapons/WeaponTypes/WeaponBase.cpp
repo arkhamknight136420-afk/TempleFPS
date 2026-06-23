@@ -5,7 +5,9 @@
 #include "TimerManager.h"
 #include "../../ActorComponents/HealthComponent.h"
 #include "../../Characters/BaseCharacter.h"
-
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -303,11 +305,11 @@ bool AWeaponBase::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& Out
 
 	const FColor TraceColor = bHit ? FColor::Green : FColor::Red;
 
-	DrawDebugLine(GetWorld(), StartLocation, OutAimPoint, TraceColor, false, 2.0f, 0, 2.0f);
+	DrawDebugLine(GetWorld(), StartLocation, OutAimPoint, TraceColor, false, .5f, 0, 2.0f);
 
 	if (bHit)
 	{
-		DrawDebugSphere(GetWorld(), OutPlayerHit.ImpactPoint, 8.0f, 12, FColor::Green, false, 2.0f);
+		DrawDebugSphere(GetWorld(), OutPlayerHit.ImpactPoint, 8.0f, 12, FColor::Green, false, .5f);
 	}
 
 	return bHit;
@@ -329,12 +331,10 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(GetOwner());
 	QueryParams.bTraceComplex = bBulletTraceComplex;
 
-	if (BaseCharacter) // HERE
-	{
-		QueryParams.AddIgnoredActor(BaseCharacter); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
-	}
+	
 
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(
 		OutWeaponHit,
@@ -343,6 +343,7 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 		BulletTraceChannel,
 		QueryParams
 	);
+	PlayMuzzleFlashEffect(); 
 
 	if (bHit)
 	{
@@ -366,11 +367,11 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 	const FVector DebugEnd = bHit ? OutWeaponHit.ImpactPoint : EndLocation;
 	const FColor TraceColor = bHit ? FColor::Cyan : FColor::Orange;
 
-	DrawDebugLine(GetWorld(), StartLocation, DebugEnd, TraceColor, false, 2.0f, 0, 2.0f);
+	DrawDebugLine(GetWorld(), StartLocation, DebugEnd, TraceColor, false, .5f, 0, 2.0f);
 
 	if (bHit)
 	{
-		DrawDebugSphere(GetWorld(), OutWeaponHit.ImpactPoint, 8.0f, 12, FColor::Cyan, false, 2.0f);
+		DrawDebugSphere(GetWorld(), OutWeaponHit.ImpactPoint, 8.0f, 12, FColor::Cyan, false, .5f);
 	}
 
 	return bHit;
@@ -399,5 +400,18 @@ void AWeaponBase::ResolveBulletHitResult(const FHitResult& HitResult)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[WEAPON HIT] No HealthComponent found on %s"), *HitResult.GetActor()->GetName());
 	}
+}
+
+void AWeaponBase::PlayMuzzleFlashEffect()
+{
+	UNiagaraFunctionLibrary::SpawnSystemAttached(
+		MuzzleFlashEffect,
+		MuzzleLocation,
+		NAME_None,
+		FVector::ZeroVector,
+		FRotator(0.f, -90.f, 0.f), 
+		EAttachLocation::SnapToTarget,
+		true
+	);
 }
 

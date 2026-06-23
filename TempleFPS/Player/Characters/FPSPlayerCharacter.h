@@ -147,11 +147,20 @@ protected:
 	 UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Combat|Aiming")
 	 float AimInterpSpeed = 300.f;
 
+	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	 UCharacterMovementComponent* CharacterMovementComponent;
+
 	 bool IsInterpolatingAim = false;
 
 	 bool IsAiming = false;
 
-	 // Camera Crouch Settings
+	 
+
+	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Stance")
+	 float StandingCapsuleHalfHeight = 88.0f;
+
+	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Stance")
+	 float CrouchedCapsuleHalfHeight = 60.0f;
 
 	
 
@@ -172,11 +181,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement|Speed")
 	float AimSpeed = 10.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Movement|Stance")
-	float StandingCapsuleHalfHeight = 88.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Movement|Stance")
-	float CrouchedCapsuleHalfHeight = 60.0f;
+	
 
 
 

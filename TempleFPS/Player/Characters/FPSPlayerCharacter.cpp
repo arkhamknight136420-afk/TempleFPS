@@ -15,6 +15,8 @@ AFPSPlayerCharacter::AFPSPlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+
+	CharacterMovementComponent = GetCharacterMovement();
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	BrainComponent = CreateDefaultSubobject<UFPSBrainComponent>(TEXT("BrainComponent"));
@@ -27,6 +29,7 @@ AFPSPlayerCharacter::AFPSPlayerCharacter()
 	SpringArmComponent->bUsePawnControlRotation = true;
 	SpringArmComponent->SocketOffset = FVector(0.f, 70.f, 50.f);
 
+	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
 
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));

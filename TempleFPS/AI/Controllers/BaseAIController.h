@@ -25,6 +25,11 @@ public:
 	UFUNCTION()
 	void UnfocusOnTarget();
 
+	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
+	void SetPlayerBlackBoardKey();
+
+
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
