@@ -165,4 +165,5 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void PlayMuzzleFlashEffect();
+
 };
