@@ -18,7 +18,9 @@ class TEMPLEFPS_API  AFPSPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+public: 
 
+	
 protected:
 
 	//Brain Reference

@@ -7,6 +7,9 @@
 #include "../FiniteStateMachines/MovementStates/JumpState.h"
 
 
+
+
+
 void AFPSPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -41,7 +44,11 @@ void AFPSPlayerController::BeginPlay()
 		SubsSystem->AddMappingContext(PlayerMappingContext, 0);
 	}
 
-	
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->ViewPitchMin = -70.0f;
+		PlayerCameraManager->ViewPitchMax = 70.0f;
+	}
 }
 
 void AFPSPlayerController::SetupInputComponent()

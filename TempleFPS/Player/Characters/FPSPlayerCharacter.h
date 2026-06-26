@@ -152,6 +152,7 @@ protected:
 
 	 bool IsInterpolatingAim = false;
 
+	 UPROPERTY(BlueprintReadOnly, Category = "Combat|Aiming")
 	 bool IsAiming = false;
 
 	 
