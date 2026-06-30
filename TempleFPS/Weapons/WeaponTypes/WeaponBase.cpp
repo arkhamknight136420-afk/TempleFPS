@@ -8,6 +8,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -81,6 +82,8 @@ void AWeaponBase::StartFire()
 
 void AWeaponBase::StopFire()
 {
+	IsShooting = false; 
+	UE_LOG(LogTemp, Warning, TEXT("StopFire Called"));
 }
 
 bool AWeaponBase::CanFire() const
@@ -118,6 +121,10 @@ void AWeaponBase::FireOnce()
 	AmmoInMagazine--;
 
 	bCanFire = false;
+	IsShooting = true;
+
+	PlayFireSFX();
+	PlayMuzzleFlashEffect();
 
 	GetWorldTimerManager().SetTimer(
 		FireCooldownTimerHandle,
@@ -343,7 +350,6 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 		BulletTraceChannel,
 		QueryParams
 	);
-	PlayMuzzleFlashEffect(); 
 
 	if (bHit)
 	{
@@ -413,5 +419,35 @@ void AWeaponBase::PlayMuzzleFlashEffect()
 		EAttachLocation::SnapToTarget,
 		true
 	);
+
+
+	
+
+
+}
+
+void AWeaponBase::PlayFireSFX()
+{
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSFX, MuzzleLocation->GetComponentLocation(), 1.0f);
+}
+
+void AWeaponBase::PlayFireOnClipEmptySFX()
+{
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireOnClipEmptySFX, MuzzleLocation->GetComponentLocation(), 1.0f);
+}
+
+void AWeaponBase::PlayReloadStartSFX()
+{
+
+}
+
+void AWeaponBase::PlayReloadInsetSFX()
+{
+
+}
+
+void AWeaponBase::PlayReloadEndSFX()
+{
+
 }
 

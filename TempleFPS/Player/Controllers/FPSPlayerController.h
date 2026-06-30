@@ -42,6 +42,21 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Movement")
 	bool ToggleAim = false;
 
+	UPROPERTY(BlueprintReadOnly,VisibleDefaultsOnly, Category = "Input|Movement")
+	bool IsInputingAim = false;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
+	float HorizontalSensitivityMultiplier = 1.0f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
+	float VerticalSensitivityMultiplier = 1.0f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
+	float ADSHorizontalSensitivityMultiplier = .5f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
+	float ADSVerticalSensitivityMultiplier =.5f;
+
 
 
 	// Movement
@@ -153,6 +168,8 @@ protected:
 	void Input_EquipSecondary(const FInputActionValue& Value);
 
 
+
+	private:
 
 
 };

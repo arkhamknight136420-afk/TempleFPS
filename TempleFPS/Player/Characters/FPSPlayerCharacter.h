@@ -165,6 +165,7 @@ protected:
 
 	
 
+
 	 void HandleADSInterpolation();
 
 	
@@ -181,6 +182,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement|Speed")
 	float AimSpeed = 10.f;
+
+	
 
 	
 

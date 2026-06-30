@@ -23,6 +23,9 @@ void ARemington870Weapon::FireOnce()
 	AmmoInMagazine--;
 
 	bCanFire = false;
+	IsShooting = true;
+	PlayFireSFX();
+	PlayMuzzleFlashEffect();
 
 	GetWorldTimerManager().SetTimer(
 		FireCooldownTimerHandle,

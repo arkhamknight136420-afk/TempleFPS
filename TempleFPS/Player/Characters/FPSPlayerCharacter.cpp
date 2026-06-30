@@ -240,6 +240,7 @@ void AFPSPlayerCharacter::StartShooting()
 	}
 
 	CurrentWeapon->StartFire();
+	
 }
 
 
@@ -262,6 +263,7 @@ void AFPSPlayerCharacter::StopShooting()
 	}
 
 	CurrentWeapon->StopFire();
+	
 }
 void AFPSPlayerCharacter::StartAiming()
 {

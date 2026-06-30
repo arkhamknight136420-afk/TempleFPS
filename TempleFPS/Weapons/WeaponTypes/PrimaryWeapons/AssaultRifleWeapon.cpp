@@ -29,6 +29,7 @@ void AAssaultRifleWeapon::StartFire()
 void AAssaultRifleWeapon::StopFire()
 {
 	bIsTriggerHeld = false;
+	IsShooting = false;
 
 	GetWorldTimerManager().ClearTimer(AutomaticFireTimerHandle);
 }

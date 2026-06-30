@@ -22,15 +22,28 @@ class TEMPLEFPS_API AWeaponBase : public AActor, public IInteractionInterface
 	GENERATED_BODY()
 
 public:
+	//=====================================================
+	// UPROPERTIES
+	//=====================================================
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* WeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Attachment")
+	FName AttachSocketName = TEXT("HandGrip_R");
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon|Attachment")
+	FTransform ThirdPersonGripOffset;
+
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool IsShooting = false;
+
+
+	//=====================================================
+	// UFUNCTIONS
+	//=====================================================
+
 	AWeaponBase();
 
-protected:
-	virtual void BeginPlay() override;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Muzzle", meta = (AllowPrivateAccess = "true"))
-	USceneComponent* MuzzleLocation;
-
-public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Interact_Implementation(AActor* Interactor) override;
@@ -45,15 +58,6 @@ public:
 	{
 		return WeaponMesh;
 	}
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* WeaponMesh;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Attachment")
-	FName AttachSocketName = TEXT("HandGrip_R");
-
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon|Attachment")
-	FTransform ThirdPersonGripOffset;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void TryFire();
@@ -88,15 +92,13 @@ public:
 	
 
 protected:
-	UFUNCTION()
-	virtual void ResetFireCooldown();
 
-	UFUNCTION()
-	virtual void InsertAmmoIntoMagazine();
+	//=====================================================
+	// UPROPERTIES
+	//=====================================================
 
-	UFUNCTION()
-	virtual void FinishReload();
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Muzzle", meta = (AllowPrivateAccess = "true"))
+	USceneComponent* MuzzleLocation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float Damage = 20.f;
@@ -156,14 +158,83 @@ protected:
 	bool bIsReloading = false;
 
 
+
 	FTimerHandle FireCooldownTimerHandle;
 	FTimerHandle ReloadFinishedTimerHandle;
 	FTimerHandle AmmoInsertTimerHandle;
 
+//AUDIO
+
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Audio")
+	USoundBase* FireSFX;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Audio")
+	USoundBase* FireOnClipEmptySFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ReloadStartSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ReloadInsertSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ReloadFinishSFX;
+
+
+//VFX
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
 	UNiagaraSystem* MuzzleFlashEffect;
 
+	
+
+	
+	//=====================================================
+	// UFUNCTIONS
+	//=====================================================
+
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	virtual void ResetFireCooldown();
+
+	UFUNCTION()
+	virtual void InsertAmmoIntoMagazine();
+
+	UFUNCTION()
+	virtual void FinishReload();
+
+//AUDIO
+	UFUNCTION()
+	void PlayFireSFX();
+
+	UFUNCTION()
+	void PlayFireOnClipEmptySFX();
+
+	UFUNCTION()
+	void PlayReloadStartSFX();
+
+	UFUNCTION()
+	void PlayReloadInsetSFX();
+	
+	UFUNCTION()
+	void PlayReloadEndSFX();
+
+
+
+
+
+
+//VFX 
+
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void PlayMuzzleFlashEffect();
+
+
+	
+	
+
+
 
 };

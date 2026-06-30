@@ -46,8 +46,8 @@ void AFPSPlayerController::BeginPlay()
 
 	if (PlayerCameraManager)
 	{
-		PlayerCameraManager->ViewPitchMin = -70.0f;
-		PlayerCameraManager->ViewPitchMax = 70.0f;
+		PlayerCameraManager->ViewPitchMin = -50.0f;
+		PlayerCameraManager->ViewPitchMax = 50.0f;
 	}
 }
 
@@ -144,8 +144,19 @@ void AFPSPlayerController::Input_Look(const FInputActionValue& Value)
 {
 	const FVector2D LookInput = Value.Get<FVector2D>();
 
-	AddYawInput(LookInput.X);
-	AddPitchInput(-LookInput.Y);
+	if (IsInputingAim)
+	{
+
+		AddYawInput(LookInput.X * ADSHorizontalSensitivityMultiplier);
+		AddPitchInput(-LookInput.Y * ADSVerticalSensitivityMultiplier);
+	}
+	else
+	{
+
+		AddYawInput(LookInput.X * HorizontalSensitivityMultiplier);
+		AddPitchInput(-LookInput.Y * VerticalSensitivityMultiplier);
+	}
+
 }
 
 void AFPSPlayerController::Input_Interact(const FInputActionValue& Value)
@@ -261,9 +272,10 @@ void AFPSPlayerController::Input_Reload_End(const FInputActionValue& Value)
 }
 void AFPSPlayerController::Input_Shoot_Start(const FInputActionValue& Value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[SHOOT INPUT] STARTED"));
+
 	if (!AFPSPlayerCharacterRef)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot start shooting."));
 		return;
 	}
 
@@ -272,9 +284,10 @@ void AFPSPlayerController::Input_Shoot_Start(const FInputActionValue& Value)
 
 void AFPSPlayerController::Input_Shoot_End(const FInputActionValue& Value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[SHOOT INPUT] COMPLETED"));
+
 	if (!AFPSPlayerCharacterRef)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AFPSPlayerCharacterRef is null. Cannot stop shooting."));
 		return;
 	}
 
@@ -283,14 +296,44 @@ void AFPSPlayerController::Input_Shoot_End(const FInputActionValue& Value)
 
 void AFPSPlayerController::Input_Aim_Start(const FInputActionValue& Value)
 {
-	AFPSPlayerCharacterRef ->StartAiming();
+	if (!AFPSPlayerCharacterRef)
+	{
+		return;
+	}
+
+	if (ToggleAim)
+	{
+		if (IsInputingAim)
+		{
+			AFPSPlayerCharacterRef->StopAiming();
+			IsInputingAim = false;
+		}
+		else
+		{
+			AFPSPlayerCharacterRef->StartAiming();
+			IsInputingAim = true;
+		}
+	}
+	else
+	{
+		AFPSPlayerCharacterRef->StartAiming();
+		IsInputingAim = true;
+	}
 }
 
 void AFPSPlayerController::Input_Aim_End(const FInputActionValue& Value)
 {
-	AFPSPlayerCharacterRef->StopAiming();
-}
+	if (!AFPSPlayerCharacterRef)
+	{
+		return;
+	}
 
+	if (!ToggleAim)
+	{
+		AFPSPlayerCharacterRef->StopAiming();
+		IsInputingAim = false;
+	}
+}
 
 void AFPSPlayerController::Input_EquipPrimary(const FInputActionValue& Value)
 {
