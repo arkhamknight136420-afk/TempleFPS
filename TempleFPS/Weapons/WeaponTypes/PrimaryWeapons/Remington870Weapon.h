@@ -27,6 +27,8 @@ public:
 
 	 bool CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& OutWeaponHit) override;
 
+	 bool CanFire() const override;
+
 
 	 UFUNCTION(BlueprintCallable)
 	  void ResolveBulletHitResults(const TArray<FHitResult>& HitResults);
@@ -38,6 +40,28 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	FRotator CreateRandomSpread();
+
+	
+	 void Reload()override;
+
+	  void TryFire() override;
+
+	 void InsertAmmoIntoMagazine()override;
+
+	 virtual bool CanReload() const;
+
+	 void FinishReload() override;
+
+	  void ResetFireCooldown() override;
+
+	 UPROPERTY(BlueprintReadOnly, Category = "State")
+	 bool bLoopReload = true;
+
+	 UPROPERTY(BlueprintReadOnly, Category = "State")
+	 bool bRoundChambered = true;
+
+	 UPROPERTY(BlueprintReadOnly, Category = "State")
+	 bool bIsChamberingRound = false;
 
 private:
 

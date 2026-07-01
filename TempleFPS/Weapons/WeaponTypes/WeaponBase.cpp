@@ -160,6 +160,7 @@ void AWeaponBase::FireOnce()
 
 void AWeaponBase::ResetFireCooldown()
 {
+	
 	bCanFire = true;
 }
 

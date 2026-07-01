@@ -14,14 +14,16 @@ void ARemington870Weapon::FireOnce()
 	{
 		if (AmmoInMagazine <= 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Cannot fire. Magazine empty."));
+			UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Cannot fire. Magazine empty."));
 		}
 
 		return;
 	}
-
+	GetWorldTimerManager().ClearTimer(ReloadFinishedTimerHandle);
+	bIsChamberingRound = false;
 	AmmoInMagazine--;
 
+	bRoundChambered = false;
 	bCanFire = false;
 	IsShooting = true;
 	PlayFireSFX();
@@ -35,7 +37,7 @@ void ARemington870Weapon::FireOnce()
 		false
 	);
 
-	UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Fired: %s | Ammo: %d / %d"),
+	UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Fired: %s | Ammo: %d / %d"),
 		*GetName(),
 		AmmoInMagazine,
 		AmmoInReserve
@@ -66,6 +68,79 @@ void ARemington870Weapon::FireOnce()
 
 
 	
+}
+
+void ARemington870Weapon::ResetFireCooldown()
+{
+	if (AmmoInMagazine <= 0)
+	{
+		bRoundChambered = false;
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Cooldown finished: no ammo left to chamber"));
+	}
+	else
+	{
+		bRoundChambered = true;
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Auto-chambered next round"));
+	}
+
+	bCanFire = true;
+}
+
+void ARemington870Weapon::TryFire()
+{
+	if (AmmoInMagazine <= 0) // if theres no ammo in the gun at all
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] No ammo left in the magazine at all cannot fire   "));
+		return;
+	}
+	if (!bRoundChambered)
+	{
+		if (bIsChamberingRound)
+		{
+			return;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Chambering A round"));
+
+		bIsChamberingRound = true;
+		bIsReloading = false;
+
+		GetWorldTimerManager().ClearTimer(AmmoInsertTimerHandle);
+
+		GetWorldTimerManager().SetTimer(
+			ReloadFinishedTimerHandle,
+			this,
+			&ARemington870Weapon::FinishReload,
+			ReloadDuration,
+			false
+		);
+
+		return;
+	}
+
+	FireOnce();
+}
+
+
+bool ARemington870Weapon::CanFire() const
+{
+	if (!bRoundChambered)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Cannot Fire No Round Chambered   "));
+		return false;
+	}
+	if (!bCanFire)
+	{
+		return false;
+	}
+
+	if (AmmoInMagazine <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON]  Cannot Fire No More Ammo In Magazine "));
+		return false;
+	}
+
+	return true;
 }
 
 bool ARemington870Weapon::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint)
@@ -203,7 +278,6 @@ bool ARemington870Weapon::CreateWeaponBulletTrace(const FVector& AimPoint, FHitR
 	return bHit;
 }
 
-
 FRotator ARemington870Weapon::CreateRandomSpread()
 {
 	return FRotator(
@@ -228,4 +302,112 @@ void ARemington870Weapon::ResolveBulletHitResults(const TArray<FHitResult>& HitR
 				UE_LOG(LogTemp, Warning, TEXT("[WEAPON HIT] No HealthComponent found on %s"), *HitResult.GetActor()->GetName());
 			}
 	}
+}
+
+void ARemington870Weapon::Reload()
+{
+	if (!CanReload())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Cannot reload."));
+		return;
+	}
+
+	ReloadDuration = FMath::Max(ReloadDuration, 0.01f);
+
+	AmmoInsertNormalizedTime = FMath::Clamp(
+		AmmoInsertNormalizedTime,
+		0.0f,
+		1.0f
+	);
+
+	const float ActualAmmoInsertTime =
+		ReloadDuration * AmmoInsertNormalizedTime;
+
+	bIsReloading = true;
+
+	
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[REMINGTON] Reload started: %s | ReloadDuration: %.2f | AmmoInsertTime: %.2f"),
+		*GetName(),
+		ReloadDuration,
+		ActualAmmoInsertTime
+	);
+
+	GetWorldTimerManager().SetTimer(
+		AmmoInsertTimerHandle,
+		this,
+		&ARemington870Weapon::InsertAmmoIntoMagazine,
+		ActualAmmoInsertTime,
+		bLoopReload
+	);
+
+
+	
+}
+
+void ARemington870Weapon::InsertAmmoIntoMagazine()
+{
+	const int32 AmmoNeeded = 1;
+	const int32 AmmoToInsert = FMath::Min(AmmoNeeded, AmmoInReserve);
+
+	AmmoInMagazine += AmmoToInsert;
+	AmmoInReserve -= AmmoToInsert;
+
+	UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Ammo inserted: %s | Ammo: %d / %d"),
+		*GetName(),
+		AmmoInMagazine,
+		AmmoInReserve
+	);
+
+	if (AmmoInMagazine == MagazineSize)
+	{
+
+		GetWorldTimerManager().ClearTimer(AmmoInsertTimerHandle);
+		
+		//call reload pump animation 
+
+		GetWorldTimerManager().SetTimer(
+			ReloadFinishedTimerHandle,
+			this,
+			&ARemington870Weapon::FinishReload,
+			ReloadDuration,
+			false
+		);
+		UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Gun Is fully Loaded Chambering round Now  "));
+	}
+
+	
+
+}
+
+void ARemington870Weapon::FinishReload()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Round Chambered  "));
+	bIsReloading = false;
+	bRoundChambered = true;
+	bIsChamberingRound = false;
+
+
+
+}
+
+bool ARemington870Weapon::CanReload() const
+{
+	if (bIsChamberingRound)
+	{
+		return false;
+	}
+
+	if (AmmoInMagazine >= MagazineSize)
+	{
+		return false;
+	}
+
+	if (AmmoInReserve <= 0)
+	{
+		return false;
+	}
+
+	return true;
 }
