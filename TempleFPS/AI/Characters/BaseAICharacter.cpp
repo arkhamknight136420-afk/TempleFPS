@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "../../Characters/BaseCharacter.h"
 #include "Components/ChildActorComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
 
 // Sets default values
 ABaseAICharacter::ABaseAICharacter()
@@ -24,7 +26,12 @@ ABaseAICharacter::ABaseAICharacter()
 	HeldWeaponComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("HeldWeaponComponent"));
 	HeldWeaponComponent->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
 
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
@@ -114,7 +121,15 @@ void ABaseAICharacter::StartShooting()
 
 void ABaseAICharacter::StopShooting()
 {
+	AWeaponBase* Weapon =
+		Cast<AWeaponBase>(
+			HeldWeaponComponent->GetChildActor()
+		);
 
+	if (Weapon)
+	{
+		Weapon->StopFire();
+	}
 
 }
 
@@ -125,4 +140,20 @@ void ABaseAICharacter::ReloadWeapon()
 	
 
 	
+}
+
+void ABaseAICharacter::UpdateEyePitch(AActor* Target)
+{
+	if (!Target)
+	{
+		return;
+	}
+
+	FRotator LookAt =
+		UKismetMathLibrary::FindLookAtRotation(
+			EyesLocation->GetComponentLocation(),
+			Target->GetActorLocation());
+
+	EyesLocation->SetRelativeRotation(
+		FRotator(LookAt.Pitch, 0.f, 0.f));
 }

@@ -5,6 +5,7 @@
 #include "../../Characters/BaseCharacter.h"
 #include "BaseAICharacter.generated.h"
 
+
 class UChildActorComponent;
 class AWeaponBase;
 class UHealthComponent;
@@ -55,10 +56,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ReloadWeapon();
 
+	void UpdateEyePitch(AActor* Target);
+
 protected:
 	virtual void BeginPlay() override;
 
 	
+
 
 	
 

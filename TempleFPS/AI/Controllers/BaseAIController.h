@@ -28,6 +28,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
 	void SetPlayerBlackBoardKey();
 
+	UFUNCTION(BlueprintCallable, Category = "Rotation")
+	void YawFocusOnTarget(AActor* Target, float DeltaTime);
+
 
 
 protected:

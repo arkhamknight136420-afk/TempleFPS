@@ -5,6 +5,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ABaseAIController::ABaseAIController()
 {
@@ -19,7 +20,7 @@ ABaseAIController::ABaseAIController()
 	AIPerception->ConfigureSense(*SightConfig);
 	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 
-	
+	bSetControlRotationFromPawnOrientation = false;
 
 
 
@@ -113,3 +114,25 @@ void ABaseAIController::SetPlayerBlackBoardKey()
 		BlackboardComponent->SetValueAsObject(TEXT("Player"), PlayerPawn);
 	}
 }
+
+void ABaseAIController::YawFocusOnTarget(AActor* Target, float DeltaTime)
+{
+	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(GetPawn()->GetActorLocation(), Target->GetActorLocation());
+	float DesiredYaw = LookAtRot.Yaw;
+
+
+	float CurrentPitch = GetControlRotation().Pitch;
+	float CurrentRoll = GetControlRotation().Roll;
+
+
+	FRotator Newrot(CurrentPitch, DesiredYaw, CurrentRoll);
+
+	FRotator UpdatedRotation = FMath::RInterpTo(GetControlRotation(), Newrot, DeltaTime, 8.0f);
+
+	SetControlRotation(UpdatedRotation);
+
+
+}
+
+
+		
