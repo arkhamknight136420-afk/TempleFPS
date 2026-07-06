@@ -53,19 +53,19 @@ void UDeathComponent::HandleDeath()
 
 	
 
-	if (APlayerController* CharacterController = Cast< APlayerController>(Character->GetController()))
+	if (APlayerController* CharacterController = Cast< APlayerController>(Character->GetController())) // if the Controller on this character is A player controller
 	{
 		CharacterController->DisableInput(CharacterController);	
 	}
-	else if (AAIController* AIController = Cast<AAIController>(Character->GetController()))
+	else if (AAIController* AIController = Cast<AAIController>(Character->GetController())) // if the Controller on this character is A AIcontroller
 	{
-		if (ABaseAICharacter* AICharacter = Cast<ABaseAICharacter>(GetOwner()))
+		if (ABaseAICharacter* AICharacter = Cast<ABaseAICharacter>(GetOwner())) // if the owner of this death component is an AI character
 		{
-			AICharacter->StopShooting();
+			AICharacter->StopShooting(); // stop shooting ypur weapon
 
-			if (UBlackboardComponent* Blackboard = AIController->GetBlackboardComponent())
+			if (UBlackboardComponent* Blackboard = AIController->GetBlackboardComponent()) // if the Ai controller of this actor that owns this death component has a blackboard
 			{
-				Blackboard->ClearValue(TEXT("Player"));
+				Blackboard->ClearValue(TEXT("Player")); 
 			}
 
 			if (UBrainComponent* Brain = AIController->GetBrainComponent())

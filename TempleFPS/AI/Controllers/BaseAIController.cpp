@@ -5,7 +5,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetMathLibrary.h" 
+#include "../../Characters/BaseCharacter.h"
 
 ABaseAIController::ABaseAIController()
 {
@@ -79,12 +80,9 @@ void ABaseAIController::HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus)
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-
-
-		if (Actor == PlayerPawn)
+		if (ABaseCharacter* SeenCharacter = Cast<ABaseCharacter>(Actor))
 		{
-			BlackboardComponent->SetValueAsObject(TEXT("Player"), Actor);
+			BlackboardComponent->SetValueAsObject(TEXT("Player"), SeenCharacter);
 		}
 	}
 	else
@@ -127,7 +125,7 @@ void ABaseAIController::YawFocusOnTarget(AActor* Target, float DeltaTime)
 
 	FRotator Newrot(CurrentPitch, DesiredYaw, CurrentRoll);
 
-	FRotator UpdatedRotation = FMath::RInterpTo(GetControlRotation(), Newrot, DeltaTime, 8.0f);
+	FRotator UpdatedRotation = FMath::RInterpTo(GetControlRotation(), Newrot, DeltaTime, 6.0f);
 
 	SetControlRotation(UpdatedRotation);
 

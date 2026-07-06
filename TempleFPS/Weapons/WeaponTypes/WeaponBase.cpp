@@ -9,6 +9,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AWeaponBase::AWeaponBase()
 {
@@ -44,7 +45,6 @@ void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-
 
 void AWeaponBase::Interact_Implementation(AActor* Interactor)
 {
@@ -184,8 +184,6 @@ bool AWeaponBase::CanReload() const
 	return true;
 }
 
-// WeaponBase.cpp
-
 void AWeaponBase::Reload()
 {
 	if (!CanReload())
@@ -274,8 +272,8 @@ bool AWeaponBase::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& Out
 		return false;
 	}
 
-	const FVector StartLocation = BaseCharacter->EyesLocation->GetComponentLocation(); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
-	const FVector EndLocation = StartLocation + BaseCharacter->EyesLocation->GetForwardVector() * MaxTravelDistance; // HERE HERE HERE HERE HERE HERE HERE HERE 
+	const FVector StartLocation = BaseCharacter->GetAimStartLocation();
+	const FVector EndLocation = StartLocation + BaseCharacter->GetAimDirection() * MaxTravelDistance;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
@@ -383,6 +381,7 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 
 	return bHit;
 }
+
 void AWeaponBase::SetWeaponEquipped()
 {
 	if (!WeaponMesh) return;
@@ -398,14 +397,23 @@ void AWeaponBase::SetWeaponEquipped()
 void AWeaponBase::ResolveBulletHitResult(const FHitResult& HitResult)
 {
 	DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, 2.f);
-
-	if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>())
+	if (USkeletalMeshComponent* CharacterMesh = Cast<USkeletalMeshComponent>(HitResult.GetComponent())) // if what we hit was a skeletal mesh
 	{
-		HealthComponent->ApplyDamage(Damage);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[WEAPON HIT] No HealthComponent found on %s"), *HitResult.GetActor()->GetName());
+		if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>()) // if the Hit actor has a health component
+		{
+			if (WasHeadShot(HitResult))
+			{
+				UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Head Shot"))
+				float HeadShotDamage = Damage * HeadShotDamageMultiplier;
+				HealthComponent->ApplyDamage(HeadShotDamage);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Body Shot"))
+				HealthComponent->ApplyDamage(Damage);
+				
+			}
+		}
 	}
 }
 
@@ -452,3 +460,11 @@ void AWeaponBase::PlayReloadEndSFX()
 
 }
 
+bool AWeaponBase::WasHeadShot(const FHitResult& HitResult)
+{
+	if (HitResult.BoneName == TEXT("head"))
+	{
+		return true;
+	}
+	return false;
+}

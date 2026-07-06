@@ -104,6 +104,9 @@ protected:
 	float Damage = 20.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	float HeadShotDamageMultiplier = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float FireRate = 0.25f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
@@ -117,6 +120,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float MaxTravelDistance = 9000.f;
+
 
 	UPROPERTY(
 		EditDefaultsOnly,
@@ -204,6 +208,9 @@ protected:
 
 	UFUNCTION()
 	virtual void FinishReload();
+
+	UFUNCTION()
+	bool WasHeadShot(const FHitResult& HitResult);
 
 //AUDIO
 	UFUNCTION()

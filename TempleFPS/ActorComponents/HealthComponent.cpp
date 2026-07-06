@@ -48,24 +48,24 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::ApplyDamage(float InputDamageAmount)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ApplyDamage called on owner: %s"),
+	UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] ApplyDamage called on owner: %s"),
 		GetOwner() ? *GetOwner()->GetName() : TEXT("NULL"));
 	if (bIsDead) return;
 
 	CurrentHealth -= InputDamageAmount;
 
-	UE_LOG(LogTemp, Warning, TEXT("%s took %f damage, current health is %f"),
+	UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] %s took %f damage, current health is %f"),
 		*GetOwner()->GetName(), InputDamageAmount, CurrentHealth);
 
 	if (ABaseAICharacter* AICharacterRef = Cast<ABaseAICharacter>(GetOwner()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Owner is an AI Character"));
+		UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] Owner is an AI Character"));
 
 		if (ABaseAIController* AIControllerRef = Cast<ABaseAIController>(AICharacterRef->GetController()))
 		{
 			AIControllerRef->SetPlayerBlackBoardKey();
 
-			UE_LOG(LogTemp, Warning, TEXT("Set PlayerBlackBoardKey on AI Controller"));
+			UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] Set PlayerBlackBoardKey on AI Controller"));
 		}
 	}
 
@@ -78,7 +78,7 @@ void UHealthComponent::ApplyDamage(float InputDamageAmount)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("HealthComponent on %s has no reference to DeathComponent"),
+			UE_LOG(LogTemp, Error, TEXT("[HEALTH COMPONENT] HealthComponent on %s has no reference to DeathComponent"),
 				*GetOwner()->GetName());
 		}
 	}

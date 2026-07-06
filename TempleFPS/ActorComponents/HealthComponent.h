@@ -36,6 +36,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float GetMaxHealth() const { return MaxHealth; }
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	bool IsDead() const { return bIsDead; }
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

@@ -33,7 +33,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHealthComponent* HealthComponent;
 
-	
+	UPROPERTY()
+	AActor* CurrentAimTarget = nullptr;
+
+	void SetAimTarget(AActor* Target);
+
+	virtual FVector GetAimDirection() const override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UDeathComponent* DeathComponent;

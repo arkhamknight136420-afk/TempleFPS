@@ -121,7 +121,6 @@ void ARemington870Weapon::TryFire()
 	FireOnce();
 }
 
-
 bool ARemington870Weapon::CanFire() const
 {
 	if (!bRoundChambered)
@@ -293,13 +292,23 @@ void ARemington870Weapon::ResolveBulletHitResults(const TArray<FHitResult>& HitR
 	for (const FHitResult& HitResult : HitResults)
 	{
 			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, 2.f);
-			if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>())
+			if (USkeletalMeshComponent* CharacterMesh = Cast<USkeletalMeshComponent>(HitResult.GetComponent())) // if what we hit was a skeletal mesh
 			{
-				HealthComponent->ApplyDamage(Damage);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[WEAPON HIT] No HealthComponent found on %s"), *HitResult.GetActor()->GetName());
+				if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>()) // if the Hit actor has a health component
+				{
+					if (WasHeadShot(HitResult))
+					{
+						UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Head Shot"))
+							float HeadShotDamage = Damage * HeadShotDamageMultiplier;
+						HealthComponent->ApplyDamage(HeadShotDamage);
+					}
+					else
+					{
+						UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Body Shot"))
+							HealthComponent->ApplyDamage(Damage);
+
+					}
+				}
 			}
 	}
 }

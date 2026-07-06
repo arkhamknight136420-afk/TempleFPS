@@ -27,14 +27,12 @@ ABaseAICharacter::ABaseAICharacter()
 	HeldWeaponComponent->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
 
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = true;
+	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
-
-	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f);
 
 	EyesLocation->SetRelativeLocation(FVector(0.f, 0.f, 75.f));
 	
@@ -157,3 +155,26 @@ void ABaseAICharacter::UpdateEyePitch(AActor* Target)
 	EyesLocation->SetRelativeRotation(
 		FRotator(LookAt.Pitch, 0.f, 0.f));
 }
+
+void ABaseAICharacter::SetAimTarget(AActor* Target)
+{
+	CurrentAimTarget = Target;
+}
+
+FVector ABaseAICharacter::GetAimDirection() const
+{
+	if (CurrentAimTarget)
+	{
+		return (
+			CurrentAimTarget->GetActorLocation()
+			-
+			EyesLocation->GetComponentLocation()
+			).GetSafeNormal();
+	}
+
+	return Super::GetAimDirection();
+}
+
+// create bloom 
+
+//

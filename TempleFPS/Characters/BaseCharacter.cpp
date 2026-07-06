@@ -36,4 +36,12 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
+FVector ABaseCharacter::GetAimStartLocation() const
+{
+	return EyesLocation->GetComponentLocation();
+}
 
+FVector ABaseCharacter::GetAimDirection() const
+{
+	return EyesLocation->GetForwardVector();
+}
