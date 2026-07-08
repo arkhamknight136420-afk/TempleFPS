@@ -38,6 +38,10 @@ public:
 	bool IsShooting = false;
 
 
+
+	
+
+
 	//=====================================================
 	// UFUNCTIONS
 	//=====================================================
@@ -48,6 +52,9 @@ public:
 
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	virtual FString GetPromptText_Implementation() override;
+
+	UFUNCTION()
+	bool IsMagazineEmpty() const;
 
 	void SetWeaponEquipped();
 

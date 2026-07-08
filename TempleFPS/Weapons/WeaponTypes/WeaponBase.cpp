@@ -113,6 +113,7 @@ void AWeaponBase::FireOnce()
 		if (AmmoInMagazine <= 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Cannot fire. Magazine empty."));
+
 		}
 
 		return;
@@ -463,6 +464,15 @@ void AWeaponBase::PlayReloadEndSFX()
 bool AWeaponBase::WasHeadShot(const FHitResult& HitResult)
 {
 	if (HitResult.BoneName == TEXT("head"))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool AWeaponBase::IsMagazineEmpty() const
+{
+	if (AmmoInMagazine <= 0)
 	{
 		return true;
 	}

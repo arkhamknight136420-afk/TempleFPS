@@ -24,11 +24,23 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Accuracy")
+	float MissRadius = 150.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Accuracy")
+	float MinBloomDegrees = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Accuracy")
+	float MaxBloomDegrees = 10.f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UChildActorComponent* HeldWeaponComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<AWeaponBase> DefaultWeaponClass;
+
+	UPROPERTY(BlueprintReadOnly)
+	AWeaponBase* CurrentHeldWeapon = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHealthComponent* HealthComponent;

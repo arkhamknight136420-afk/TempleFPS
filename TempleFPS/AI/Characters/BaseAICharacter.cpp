@@ -48,11 +48,17 @@ void ABaseAICharacter::BeginPlay()
 	{
 		HeldWeaponComponent->SetChildActorClass(DefaultWeaponClass);
 
-		if (AWeaponBase* Weapon = Cast<AWeaponBase>(HeldWeaponComponent->GetChildActor()))
+		CurrentHeldWeapon = Cast<AWeaponBase>(HeldWeaponComponent->GetChildActor());
+
+		if(IsValid(CurrentHeldWeapon))
 		{
-			Weapon->SetOwner(this);
-			Weapon->SetWeaponEquipped();
-			AttachWeaponToCharacter(Weapon);
+			CurrentHeldWeapon->SetOwner(this);
+			CurrentHeldWeapon->SetWeaponEquipped();
+			AttachWeaponToCharacter(CurrentHeldWeapon);
+		}
+		else
+		{
+			UE_LOG(LogTemp,Error, TEXT("[BaseAICharacter] | BeginPlay: Current Held Weapon is not valid "))
 		}
 	}
 }
@@ -103,38 +109,26 @@ void ABaseAICharacter::EquipSecondaryWeapon()
 
 void ABaseAICharacter::StartShooting()
 {
-	AWeaponBase* Weapon =
-		Cast<AWeaponBase>(
-			HeldWeaponComponent->GetChildActor()
-		);
-
-	if (Weapon)
-	{
-		Weapon->StartFire();
-	}
-	
-
-
+		if (CurrentHeldWeapon->IsMagazineEmpty())
+		{
+			ReloadWeapon();
+			return;
+		}
+		CurrentHeldWeapon->StartFire();
 }
 
 void ABaseAICharacter::StopShooting()
 {
-	AWeaponBase* Weapon =
-		Cast<AWeaponBase>(
-			HeldWeaponComponent->GetChildActor()
-		);
-
-	if (Weapon)
-	{
-		Weapon->StopFire();
-	}
+	CurrentHeldWeapon->StopFire();
+	
 
 }
 
 void ABaseAICharacter::ReloadWeapon()
 {
+	CurrentHeldWeapon->Reload();
 
-
+	
 	
 
 	
@@ -165,11 +159,26 @@ FVector ABaseAICharacter::GetAimDirection() const
 {
 	if (CurrentAimTarget)
 	{
-		return (
-			CurrentAimTarget->GetActorLocation()
-			-
-			EyesLocation->GetComponentLocation()
-			).GetSafeNormal();
+		FVector ToTarget =
+			CurrentAimTarget->GetActorLocation() - EyesLocation->GetComponentLocation();
+
+		const float Distance = ToTarget.Size();
+
+		FVector ExactAimDirection = ToTarget.GetSafeNormal();
+
+		float BloomRadians = FMath::Atan(MissRadius / Distance);
+
+		float BloomDegrees = FMath::RadiansToDegrees(BloomRadians);
+
+		BloomDegrees = FMath::Clamp(
+			BloomDegrees,
+			MinBloomDegrees,
+			MaxBloomDegrees
+		);
+
+		BloomRadians = FMath::DegreesToRadians(BloomDegrees);
+
+		return FMath::VRandCone(ExactAimDirection, BloomRadians).GetSafeNormal();
 	}
 
 	return Super::GetAimDirection();

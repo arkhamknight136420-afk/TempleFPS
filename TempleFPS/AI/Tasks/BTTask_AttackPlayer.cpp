@@ -119,7 +119,7 @@ void UBTTask_AttackPlayer::UpdateAimAtPlayer(ABaseAIController* AIController, AB
 void UBTTask_AttackPlayer::UpdateShootingState(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget)
 {
 	if (IsFacingPlayer(AICharacter, CurrentTarget))
-	{
+	{ 
 		AICharacter->StartShooting();
 	}
 	else
