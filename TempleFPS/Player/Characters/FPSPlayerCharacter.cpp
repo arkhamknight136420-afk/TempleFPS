@@ -68,6 +68,7 @@ AFPSPlayerCharacter::AFPSPlayerCharacter()
 
 	
 }
+
 void AFPSPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -197,9 +198,6 @@ void AFPSPlayerCharacter::StopSlowWalkMovement()
 	UE_LOG(LogTemp, Log, TEXT("StopSprintMovement called"));
 }
 
-
-
-
 void AFPSPlayerCharacter::StartWalkMovement()
 {
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
@@ -210,7 +208,6 @@ void AFPSPlayerCharacter::StopWalkMovement()
 
 }
 
-
 bool AFPSPlayerCharacter::IsGrounded()
 {
 	if (GetCharacterMovement()->IsMovingOnGround())
@@ -219,7 +216,6 @@ bool AFPSPlayerCharacter::IsGrounded()
 	}
 	return false;
 }
-
 
 void AFPSPlayerCharacter::StartShooting()
 {
@@ -243,7 +239,6 @@ void AFPSPlayerCharacter::StartShooting()
 	
 }
 
-
 void AFPSPlayerCharacter::StopShooting()
 {
 	UInventoryComponent* Inventory = GetInventoryComponent();
@@ -265,6 +260,7 @@ void AFPSPlayerCharacter::StopShooting()
 	CurrentWeapon->StopFire();
 	
 }
+
 void AFPSPlayerCharacter::StartAiming()
 {
 	IsInterpolatingAim = true;

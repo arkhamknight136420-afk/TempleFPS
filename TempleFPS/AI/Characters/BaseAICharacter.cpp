@@ -73,7 +73,11 @@ void ABaseAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-
+void ABaseAICharacter::HandleDirectionalMovement(FVector2D MoveInput)
+{
+	AddMovementInput(GetActorForwardVector(), MoveInput.Y);
+	AddMovementInput(GetActorRightVector(), MoveInput.X);
+}
 
 void ABaseAICharacter::AttachWeaponToCharacter(AWeaponBase* WeaponToAttach)
 {

@@ -91,7 +91,6 @@ void ABaseAIController::HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus)
 	}	
 }
 
-
 void ABaseAIController::FocusOnTarget(AActor* TargetActor)
 {
 

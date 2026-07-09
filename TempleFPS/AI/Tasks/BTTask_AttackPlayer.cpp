@@ -18,6 +18,7 @@ UBTTask_AttackPlayer::UBTTask_AttackPlayer()
 EBTNodeResult::Type UBTTask_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ABaseAIController* AIController = GetBaseAIController(OwnerComp);
+
 	ACharacter* CurrentTarget = GetCurrentPlayer(OwnerComp);
 
 	if (!IsValid(AIController) || !IsValid(CurrentTarget))

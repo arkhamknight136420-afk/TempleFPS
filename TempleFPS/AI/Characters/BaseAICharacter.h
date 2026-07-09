@@ -24,6 +24,9 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void HandleDirectionalMovement(FVector2D MoveInput);
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Accuracy")
 	float MissRadius = 150.f;
 
@@ -75,11 +78,25 @@ public:
 
 	void UpdateEyePitch(AActor* Target);
 
+	// Starts backing away when closer than this.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Combat Movement", meta = (ClampMin = "0.0", UIMin = "0.0"))
+	float RetreatStartDistance = 700.f;
+
+	// Stops backing away once farther than this.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Combat Movement", meta = (ClampMin = "0.0", UIMin = "0.0"))
+	float RetreatStopDistance = 1000.f;
+
+	// Starts moving closer when farther than this.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Combat Movement", meta = (ClampMin = "0.0", UIMin = "0.0"))
+	float AdvanceStartDistance = 2400.f;
+
+	// Stops moving closer once closer than this.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Combat Movement", meta = (ClampMin = "0.0", UIMin = "0.0"))
+	float AdvanceStopDistance = 1900.f;
 protected:
 	virtual void BeginPlay() override;
 
 	
-
 
 	
 
