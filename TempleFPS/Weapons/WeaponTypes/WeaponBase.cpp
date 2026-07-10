@@ -478,3 +478,26 @@ bool AWeaponBase::IsMagazineEmpty() const
 	}
 	return false;
 }
+
+void  AWeaponBase::AddToAmmoInReserve(int32 AdditionalAmmo)
+{
+	AmmoInReserve += AdditionalAmmo;
+	;
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[WeaponBase] Ammo added: %d | New ammo in reserve: %d"),
+		AdditionalAmmo,
+		AmmoInReserve
+	);
+
+}
+
+int32 AWeaponBase::GetAddedReserveAmmo() const
+{
+	return AddedReserveAmmo;
+}
+
+	
+

@@ -1,5 +1,4 @@
 #include "BaseAICharacter.h"
-
 #include "../../ActorComponents/HealthComponent.h"
 #include "../../ActorComponents/DeathComponent.h"
 #include "../Controllers/BaseAIController.h"
@@ -9,8 +8,6 @@
 #include "Components/ChildActorComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-
-// Sets default values
 ABaseAICharacter::ABaseAICharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -100,31 +97,31 @@ void ABaseAICharacter::AttachWeaponToCharacter(AWeaponBase* WeaponToAttach)
 
 void ABaseAICharacter::EquipPrimaryWeapon()
 {
-	
+
 
 
 }
 
 void ABaseAICharacter::EquipSecondaryWeapon()
 {
-	
+
 
 }
 
 void ABaseAICharacter::StartShooting()
 {
-		if (CurrentHeldWeapon->IsMagazineEmpty())
-		{
-			ReloadWeapon();
-			return;
-		}
-		CurrentHeldWeapon->StartFire();
+	if (CurrentHeldWeapon->IsMagazineEmpty())
+	{
+		ReloadWeapon();
+		return;
+	}
+	CurrentHeldWeapon->StartFire();
 }
 
 void ABaseAICharacter::StopShooting()
 {
 	CurrentHeldWeapon->StopFire();
-	
+
 
 }
 
@@ -132,10 +129,10 @@ void ABaseAICharacter::ReloadWeapon()
 {
 	CurrentHeldWeapon->Reload();
 
-	
-	
 
-	
+
+
+
 }
 
 void ABaseAICharacter::UpdateEyePitch(AActor* Target)
@@ -188,6 +185,38 @@ FVector ABaseAICharacter::GetAimDirection() const
 	return Super::GetAimDirection();
 }
 
-// create bloom 
+void ABaseAICharacter::DropCurrentHeldWeapon()
+{
+	if (!IsValid(CurrentHeldWeapon) || !HeldWeaponComponent)
+	{
+		return;
+	}
 
-//
+	const FTransform DropTransform = CurrentHeldWeapon->GetActorTransform();
+
+	TSubclassOf<AWeaponBase> WeaponClass = CurrentHeldWeapon->GetClass();
+
+	FActorSpawnParameters SpawnParamaters;
+
+	SpawnParamaters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AWeaponBase* DroppedWeapon = GetWorld()->SpawnActor<AWeaponBase>(WeaponClass, DropTransform, SpawnParamaters);
+
+	if (!IsValid(DroppedWeapon))
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT(
+				"[BaseAICharacter] Failed to spawn "
+				"dropped weapon."
+			)
+		);
+
+		return;
+	}
+
+	HeldWeaponComponent->DestroyChildActor();
+	CurrentHeldWeapon = nullptr;
+
+}

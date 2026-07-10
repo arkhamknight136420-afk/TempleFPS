@@ -66,6 +66,8 @@ public:
 		return WeaponMesh;
 	}
 
+	int32 GetAddedReserveAmmo() const;
+
 	UFUNCTION(BlueprintCallable)
 	virtual void TryFire();
 
@@ -96,6 +98,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void ResolveBulletHitResult(const FHitResult& HitResult);
 
+	UFUNCTION(BlueprintCallable)
+	virtual void AddToAmmoInReserve(int32 AdditionalAmmo);
+
 	
 
 protected:
@@ -124,6 +129,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	int32 AmmoInReserve = 90;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	int32 AddedReserveAmmo = 20;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float MaxTravelDistance = 9000.f;

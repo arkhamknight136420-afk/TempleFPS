@@ -418,5 +418,10 @@ bool ARemington870Weapon::CanReload() const
 		return false;
 	}
 
+	if (bIsReloading)
+	{
+		return false;
+	}
+
 	return true;
 }

@@ -69,6 +69,22 @@ void UInventoryComponent::PickUpWeapon(
 		return;
 	}
 
+	if (IsValid(CurrentHeldWeapon) &&
+		WeaponClass == CurrentHeldWeapon->GetClass())
+	{
+		CurrentHeldWeapon->AddToAmmoInReserve(
+			CurrentHeldWeapon->GetAddedReserveAmmo()
+		);
+
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("[InventoryComponent] Picked up the same weapon. Added reserve ammo instead.")
+		);
+
+		return;
+	}
+
 	ACharacter* CharacterOwner = Cast<ACharacter>(GetOwner());
 
 	if (!CharacterOwner)
@@ -81,6 +97,7 @@ void UInventoryComponent::PickUpWeapon(
 
 		return;
 	}
+
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = CharacterOwner;

@@ -26,6 +26,7 @@ public:
 
 	void HandleDirectionalMovement(FVector2D MoveInput);
 
+	void DropCurrentHeldWeapon();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Accuracy")
 	float MissRadius = 150.f;

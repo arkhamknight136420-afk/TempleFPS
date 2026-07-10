@@ -9,9 +9,30 @@
 /**
  * 
  */
+
+class AFPSCharacterSpawnPoint;
+
 UCLASS()
 class TEMPLEFPS_API AFPSGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+
+	// SpawnAllCharacter()
+
+	//array off all spawn points
+
+	
+
+protected:
+
+	void IntitializeSpawnPoints();
+
+	TArray<TObjectPtr<AFPSCharacterSpawnPoint>> SpawnPoints;
+
+
+private:
+
+
 };
