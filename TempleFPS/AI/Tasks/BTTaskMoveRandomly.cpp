@@ -36,7 +36,7 @@ EBTNodeResult::Type UBTTaskMoveRandomly::ExecuteTask(
 	const bool bFoundLocation =
 		NavigationSystem->GetRandomReachablePointInRadius(
 			ControlledPawn->GetActorLocation(),
-			1000.0f,
+			10000.f,
 			RandomLocation
 		);
 

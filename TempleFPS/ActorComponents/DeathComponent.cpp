@@ -1,6 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "DeathComponent.h"
+
+#include "Engine/World.h"
 
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -12,90 +12,176 @@
 #include "AIController.h"
 #include "BrainComponent.h"
 
-#include "../AI/Characters/BaseAICharacter.h"
-
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 
+#include "../Characters/BaseCharacter.h"
+#include "../AI/Characters/BaseAICharacter.h"
+#include "../Core/GameModes/FPSGameMode.h"
+#include "../Player/Characters/FPSPlayerCharacter.h"
 
-// Sets default values for this component's properties
 UDeathComponent::UDeathComponent()
 {
-	// Set this component to be initialized when the game starts,
-	// and to be ticked every frame.
 	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
 }
 
-
-// Called when the game starts
 void UDeathComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
 }
-
-
-// Called every frame
-void UDeathComponent::TickComponent(
-	float DeltaTime,
-	ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction
-)
-{
-	Super::TickComponent(
-		DeltaTime,
-		TickType,
-		ThisTickFunction
-	);
-
-	// ...
-}
-
 
 void UDeathComponent::HandleDeath()
 {
-	UE_LOG(
-		LogTemp,
-		Warning,
-		TEXT("%s has died."),
-		*GetOwner()->GetName()
-	);
-
-	ACharacter* Character =
-		Cast<ACharacter>(GetOwner());
-
-	if (!Character)
+	/*
+	 * Death may only be processed once for this actor.
+	 */
+	if (bHasHandledDeath)
 	{
 		return;
 	}
 
+	bHasHandledDeath = true;
 
-	
+	ABaseCharacter* Character =
+		Cast<ABaseCharacter>(GetOwner());
+
+	if (!IsValid(Character))
+	{
+		return;
+	}
+
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("%s has died."),
+		*Character->GetName()
+	);
+
+	/*
+	 * Notify the GameMode before unpossessing the controller.
+	 *
+	 * The GameMode needs the current controller reference to determine
+	 * whether this was the human player or an AI character.
+	 */
+	const float CorpseLifetime =
+		NotifyGameModeOfDeath(Character);
+
+	/*
+	 * Disable or destroy the current controller behavior.
+	 */
 	HandleControllerDeath(Character);
-	EnableRagdoll(Character);
+
+	/*
+	 * Drop the weapon before the corpse actor is eventually destroyed.
+	 */
 	DropCharacterWeapon(Character);
+
+	/*
+	 * Convert the character into a physics ragdoll.
+	 */
+	EnableRagdoll(Character);
+
+	/*
+	 * The dead actor remains visible as a corpse but no longer counts
+	 * toward MaxCharacters.
+	 */
+	ScheduleCorpseDestruction(
+		Character,
+		CorpseLifetime
+	);
 }
 
+float UDeathComponent::NotifyGameModeOfDeath(
+	ABaseCharacter* Character
+)
+{
+	constexpr float DefaultCorpseLifetime = 10.f;
+
+	UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return DefaultCorpseLifetime;
+	}
+
+	AFPSGameMode* GameMode =
+		World->GetAuthGameMode<AFPSGameMode>();
+
+	if (!IsValid(GameMode))
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT(
+				"[DeathComponent] Could not find "
+				"AFPSGameMode."
+			)
+		);
+
+		return DefaultCorpseLifetime;
+	}
+
+	GameMode->HandleCharacterDeath(Character);
+
+	return GameMode->GetCorpseLifetime();
+}
 
 void UDeathComponent::HandleControllerDeath(
 	ACharacter* Character
 )
 {
-	if (APlayerController* CharacterController =
-		Cast<APlayerController>(Character->GetController()))
+	if (!IsValid(Character))
 	{
-		CharacterController->DisableInput(
-			CharacterController
-		);
+		return;
 	}
-	else if (AAIController* AIController =
-		Cast<AAIController>(Character->GetController()))
+
+	/*
+	 * Player death:
+	 *
+	 * - Disable input on the dead pawn.
+	 * - Unpossess it.
+	 * - Keep the PlayerController alive for RestartPlayerAtPlayerStart.
+	 */
+	if (APlayerController* PlayerController =
+		Cast<APlayerController>(
+			Character->GetController()
+		))
+	{
+		/*
+		 * Disable input on both the pawn and the PlayerController.
+		 *
+		 * Disabling only the pawn is not enough when input actions are
+		 * processed through the PlayerController.
+		 */
+		Character->DisableInput(PlayerController);
+		PlayerController->DisableInput(PlayerController);
+
+		/*
+		 * Clear any keys that were held when death occurred.
+		 */
+		PlayerController->FlushPressedKeys();
+
+		/*
+		 * Disconnect the controller from the dead character while preserving
+		 * the controller for respawning.
+		 */
+		PlayerController->UnPossess();
+
+		return;
+	}
+
+	/*
+	 * AI death:
+	 *
+	 * Completely shut down and destroy the AIController.
+	 */
+	if (AAIController* AIController =
+		Cast<AAIController>(
+			Character->GetController()
+		))
 	{
 		if (ABaseAICharacter* AICharacter =
-			Cast<ABaseAICharacter>(GetOwner()))
+			Cast<ABaseAICharacter>(Character))
 		{
 			HandleAIControllerDeath(
 				AICharacter,
@@ -105,12 +191,19 @@ void UDeathComponent::HandleControllerDeath(
 	}
 }
 
-
 void UDeathComponent::HandleAIControllerDeath(
 	ABaseAICharacter* AICharacter,
 	AAIController* AIController
 )
 {
+	if (
+		!IsValid(AICharacter)
+		|| !IsValid(AIController)
+		)
+	{
+		return;
+	}
+
 	AICharacter->StopShooting();
 
 	if (UBlackboardComponent* Blackboard =
@@ -145,15 +238,21 @@ void UDeathComponent::HandleAIControllerDeath(
 	UE_LOG(
 		LogTemp,
 		Log,
-		TEXT("AI controller fully cleaned up after death")
+		TEXT(
+			"AI controller fully cleaned up after death."
+		)
 	);
 }
-
 
 void UDeathComponent::EnableRagdoll(
 	ACharacter* Character
 )
 {
+	if (!IsValid(Character))
+	{
+		return;
+	}
+
 	USkeletalMeshComponent* Mesh =
 		Character->GetMesh();
 
@@ -163,18 +262,20 @@ void UDeathComponent::EnableRagdoll(
 	UCapsuleComponent* CapsuleComponent =
 		Character->GetCapsuleComponent();
 
-	if (!Mesh ||
-		!MovementComponent ||
-		!CapsuleComponent)
+	if (
+		!IsValid(Mesh)
+		|| !IsValid(MovementComponent)
+		|| !IsValid(CapsuleComponent)
+		)
 	{
 		UE_LOG(
 			LogTemp,
 			Error,
 			TEXT(
 				"DeathComponent on %s could not find "
-				"necessary components"
+				"the required character components."
 			),
-			*GetOwner()->GetName()
+			*Character->GetName()
 		);
 
 		return;
@@ -183,6 +284,10 @@ void UDeathComponent::EnableRagdoll(
 	MovementComponent->DisableMovement();
 	MovementComponent->StopMovementImmediately();
 
+	/*
+	 * The dead capsule should no longer block navigation or count as
+	 * a living character collision body.
+	 */
 	CapsuleComponent->SetCollisionEnabled(
 		ECollisionEnabled::NoCollision
 	);
@@ -202,10 +307,36 @@ void UDeathComponent::EnableRagdoll(
 	);
 }
 
-void UDeathComponent::DropCharacterWeapon(ACharacter* Character)
+void UDeathComponent::DropCharacterWeapon(
+	ACharacter* Character
+)
 {
-	if (ABaseAICharacter* AICharacter = Cast<ABaseAICharacter>(Character))
+	if (ABaseAICharacter* AICharacter =
+		Cast<ABaseAICharacter>(Character))
 	{
 		AICharacter->DropCurrentHeldWeapon();
 	}
+}
+
+void UDeathComponent::ScheduleCorpseDestruction(
+	ACharacter* Character,
+	float CorpseLifetime
+)
+{
+	if (!IsValid(Character))
+	{
+		return;
+	}
+
+	if (CorpseLifetime <= 0.f)
+	{
+		Character->Destroy();
+		return;
+	}
+
+	/*
+	 * SetLifeSpan causes Unreal to destroy the actor after the specified
+	 * number of seconds.
+	 */
+	Character->SetLifeSpan(CorpseLifetime);
 }
