@@ -8,8 +8,6 @@
 #include "../../InteractionInterface.h"
 #include "WeaponBase.generated.h"
 
-
-
 class AFPSPlayerCharacter;
 class ABaseCharacter;
 class UInventoryComponent;
@@ -22,51 +20,51 @@ class TEMPLEFPS_API AWeaponBase : public AActor, public IInteractionInterface
 	GENERATED_BODY()
 
 public:
-	//=====================================================
-	// UPROPERTIES
-	//=====================================================
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* WeaponMesh;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Attachment")
-	FName AttachSocketName = TEXT("HandGrip_R");
-
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon|Attachment")
-	FTransform ThirdPersonGripOffset;
-
-	UPROPERTY(BlueprintReadOnly, Category = "State")
-	bool IsShooting = false;
-
-
-
-	
-
 
 	//=====================================================
-	// UFUNCTIONS
+	// LIFECYCLE
 	//=====================================================
 
 	AWeaponBase();
 
 	virtual void Tick(float DeltaTime) override;
 
+
+	//=====================================================
+	// INTERACTION
+	//=====================================================
+
 	virtual void Interact_Implementation(AActor* Interactor) override;
+
 	virtual FString GetPromptText_Implementation() override;
 
-	UFUNCTION()
-	bool IsMagazineEmpty() const;
+
+	//=====================================================
+	// EQUIPMENT AND ATTACHMENT
+	//=====================================================
 
 	void SetWeaponEquipped();
 
 	UStaticMesh* GetWeaponStaticMesh() const;
-
 
 	UStaticMeshComponent* GetWeaponMesh() const
 	{
 		return WeaponMesh;
 	}
 
-	int32 GetAddedReserveAmmo() const;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* WeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Attachment")
+	FName AttachSocketName = TEXT("HandGrip_R");
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Attachment")
+	FTransform ThirdPersonGripOffset;
+
+
+	//=====================================================
+	// FIRING
+	//=====================================================
 
 	UFUNCTION(BlueprintCallable)
 	virtual void TryFire();
@@ -83,34 +81,92 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual bool CanFire() const;
 
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool IsShooting = false;
+
+
+	//=====================================================
+	// RELOADING
+	//=====================================================
+
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload();
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool CanReload() const;
 
-	UFUNCTION(BlueprintCallable)
-	virtual bool CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint);
+
+	//=====================================================
+	// BULLET TRACING
+	//=====================================================
 
 	UFUNCTION(BlueprintCallable)
-	virtual bool CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& OutWeaponHit);
+	virtual bool CreatePlayerBulletTrace(
+		FHitResult& OutPlayerHit,
+		FVector& OutAimPoint
+	);
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool CreateWeaponBulletTrace(
+		const FVector& AimPoint,
+		FHitResult& OutWeaponHit
+	);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool DebugBullets = true;
+
+	//=====================================================
+	// HIT RESOLUTION
+	//=====================================================
 
 	UFUNCTION(BlueprintCallable)
 	virtual void ResolveBulletHitResult(const FHitResult& HitResult);
 
+
+	//=====================================================
+	// AMMUNITION
+	//=====================================================
+
+	UFUNCTION()
+	bool IsMagazineEmpty() const;
+
+	int32 GetAddedReserveAmmo() const;
+
 	UFUNCTION(BlueprintCallable)
 	virtual void AddToAmmoInReserve(int32 AdditionalAmmo);
 
-	
 
 protected:
 
 	//=====================================================
-	// UPROPERTIES
+	// LIFECYCLE
 	//=====================================================
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Muzzle", meta = (AllowPrivateAccess = "true"))
-	USceneComponent* MuzzleLocation;
+	virtual void BeginPlay() override;
+
+
+	//=====================================================
+	// FIRING
+	//=====================================================
+
+	UFUNCTION()
+	virtual void ResetFireCooldown();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	float FireRate = 0.25f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bCanFire = true;
+
+	FTimerHandle FireCooldownTimerHandle;
+
+
+	//=====================================================
+	// DAMAGE
+	//=====================================================
+
+	UFUNCTION()
+	bool WasHeadShot(const FHitResult& HitResult);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float Damage = 20.f;
@@ -118,8 +174,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float HeadShotDamageMultiplier = 2.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
-	float FireRate = 0.25f;
+
+	//=====================================================
+	// AMMUNITION
+	//=====================================================
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	int32 MagazineSize = 30;
@@ -133,9 +191,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	int32 AddedReserveAmmo = 20;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
-	float MaxTravelDistance = 9000.f;
 
+	//=====================================================
+	// RELOADING
+	//=====================================================
+
+	UFUNCTION()
+	virtual void InsertAmmoIntoMagazine();
+
+	UFUNCTION()
+	virtual void FinishReload();
 
 	UPROPERTY(
 		EditDefaultsOnly,
@@ -161,6 +226,29 @@ protected:
 	)
 	float AmmoInsertNormalizedTime = 0.65f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bIsReloading = false;
+
+	FTimerHandle ReloadFinishedTimerHandle;
+
+	FTimerHandle AmmoInsertTimerHandle;
+
+
+	//=====================================================
+	// BULLET TRACING
+	//=====================================================
+
+	UPROPERTY(
+		VisibleAnywhere,
+		BlueprintReadOnly,
+		Category = "Muzzle",
+		meta = (AllowPrivateAccess = "true")
+	)
+	USceneComponent* MuzzleLocation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+	float MaxTravelDistance = 9000.f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trace")
 	float MuzzleTraceOvershootDistance = 10.f;
 
@@ -170,20 +258,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trace")
 	bool bBulletTraceComplex = true;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	bool bCanFire = true;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	bool bIsReloading = false;
+	//=====================================================
+	// AUDIO
+	//=====================================================
 
+	UFUNCTION()
+	void PlayFireSFX();
 
+	UFUNCTION()
+	void PlayFireOnClipEmptySFX();
 
-	FTimerHandle FireCooldownTimerHandle;
-	FTimerHandle ReloadFinishedTimerHandle;
-	FTimerHandle AmmoInsertTimerHandle;
+	UFUNCTION()
+	void PlayReloadStartSFX();
 
-//AUDIO
+	UFUNCTION()
+	void PlayReloadInsetSFX();
 
+	UFUNCTION()
+	void PlayReloadEndSFX();
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Audio")
 	USoundBase* FireSFX;
@@ -201,62 +294,19 @@ protected:
 	USoundBase* ReloadFinishSFX;
 
 
-//VFX
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
-	UNiagaraSystem* MuzzleFlashEffect;
-
-	
-
-	
 	//=====================================================
-	// UFUNCTIONS
+	// VFX
 	//=====================================================
-
-	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	virtual void ResetFireCooldown();
-
-	UFUNCTION()
-	virtual void InsertAmmoIntoMagazine();
-
-	UFUNCTION()
-	virtual void FinishReload();
-
-	UFUNCTION()
-	bool WasHeadShot(const FHitResult& HitResult);
-
-//AUDIO
-	UFUNCTION()
-	void PlayFireSFX();
-
-	UFUNCTION()
-	void PlayFireOnClipEmptySFX();
-
-	UFUNCTION()
-	void PlayReloadStartSFX();
-
-	UFUNCTION()
-	void PlayReloadInsetSFX();
-	
-	UFUNCTION()
-	void PlayReloadEndSFX();
-
-
-
-
-
-
-//VFX 
 
 	UFUNCTION(BlueprintCallable, Category = "VFX")
 	void PlayMuzzleFlashEffect();
 
+	UFUNCTION(BlueprintCallable, Category = "VFX")
+	void SpawnBulletTracerEffect(FVector MuzzlePosition, FVector ImpactPosition);
 
-	
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
+	UNiagaraSystem* MuzzleFlashEffect;
 
-
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
+	UNiagaraSystem* TracerEffect;
 };

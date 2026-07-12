@@ -8,8 +8,14 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
+
+
+	//=====================================================
+	// LIFECYCLE
+	//=====================================================
 
 AWeaponBase::AWeaponBase()
 {
@@ -46,11 +52,15 @@ void AWeaponBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+	//=====================================================
+	// INTERACTION
+	//=====================================================
+
 void AWeaponBase::Interact_Implementation(AActor* Interactor)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Weapon interacted with"));
 
-	if (AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(Interactor)) 
+	if (AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(Interactor))
 	{
 		if (UInventoryComponent* InventoryComponent = PlayerCharacter->FindComponentByClass<UInventoryComponent>())
 		{
@@ -65,10 +75,30 @@ FString AWeaponBase::GetPromptText_Implementation()
 	return TEXT("Pick Up Weapon");
 }
 
+	//=====================================================
+	// EQUIPMENT AND ATTACHMENT
+	//=====================================================
+
+void AWeaponBase::SetWeaponEquipped()
+{
+	if (!WeaponMesh) return;
+
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(false);
+}
+
 UStaticMesh* AWeaponBase::GetWeaponStaticMesh() const
 {
 	return WeaponMesh ? WeaponMesh->GetStaticMesh() : nullptr;
 }
+
+	//=====================================================
+	// FIRING
+	//=====================================================
 
 void AWeaponBase::TryFire()
 {
@@ -82,7 +112,7 @@ void AWeaponBase::StartFire()
 
 void AWeaponBase::StopFire()
 {
-	IsShooting = false; 
+	IsShooting = false;
 	UE_LOG(LogTemp, Warning, TEXT("StopFire Called"));
 }
 
@@ -161,8 +191,51 @@ void AWeaponBase::FireOnce()
 
 void AWeaponBase::ResetFireCooldown()
 {
-	
+
 	bCanFire = true;
+}
+
+	//=====================================================
+	// DAMAGE
+	//=====================================================
+
+bool AWeaponBase::WasHeadShot(const FHitResult& HitResult)
+{
+	if (HitResult.BoneName == TEXT("head"))
+	{
+		return true;
+	}
+	return false;
+}
+
+	//=====================================================
+	// RELOADING
+	//=====================================================
+
+void AWeaponBase::InsertAmmoIntoMagazine()
+{
+	const int32 AmmoNeeded = MagazineSize - AmmoInMagazine;
+	const int32 AmmoToInsert = FMath::Min(AmmoNeeded, AmmoInReserve);
+
+	AmmoInMagazine += AmmoToInsert;
+	AmmoInReserve -= AmmoToInsert;
+
+	UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Ammo inserted: %s | Ammo: %d / %d"),
+		*GetName(),
+		AmmoInMagazine,
+		AmmoInReserve
+	);
+}
+
+void AWeaponBase::FinishReload()
+{
+	bIsReloading = false;
+	bCanFire = true;
+
+	GetWorldTimerManager().ClearTimer(AmmoInsertTimerHandle);
+	GetWorldTimerManager().ClearTimer(ReloadFinishedTimerHandle);
+
+	UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Reload finished: %s"), *GetName());
 }
 
 bool AWeaponBase::CanReload() const
@@ -231,34 +304,41 @@ void AWeaponBase::Reload()
 	);
 }
 
-void AWeaponBase::InsertAmmoIntoMagazine()
+bool AWeaponBase::IsMagazineEmpty() const
 {
-	const int32 AmmoNeeded = MagazineSize - AmmoInMagazine;
-	const int32 AmmoToInsert = FMath::Min(AmmoNeeded, AmmoInReserve);
+	if (AmmoInMagazine <= 0)
+	{
+		return true;
+	}
+	return false;
+}
 
-	AmmoInMagazine += AmmoToInsert;
-	AmmoInReserve -= AmmoToInsert;
+void  AWeaponBase::AddToAmmoInReserve(int32 AdditionalAmmo)
+{
+	AmmoInReserve += AdditionalAmmo;
+	;
 
-	UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Ammo inserted: %s | Ammo: %d / %d"),
-		*GetName(),
-		AmmoInMagazine,
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[WeaponBase] Ammo added: %d | New ammo in reserve: %d"),
+		AdditionalAmmo,
 		AmmoInReserve
 	);
+
 }
 
-void AWeaponBase::FinishReload()
+int32 AWeaponBase::GetAddedReserveAmmo() const
 {
-	bIsReloading = false;
-	bCanFire = true;
-
-	GetWorldTimerManager().ClearTimer(AmmoInsertTimerHandle);
-	GetWorldTimerManager().ClearTimer(ReloadFinishedTimerHandle);
-
-	UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Reload finished: %s"), *GetName());
+	return AddedReserveAmmo;
 }
+
+	//=====================================================
+	// BULLET TRACING
+	//=====================================================
 
 bool AWeaponBase::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint)
-{ 
+{
 	ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(GetOwner()); // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
 
 	if (!BaseCharacter) // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE 
@@ -310,14 +390,18 @@ bool AWeaponBase::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& Out
 		);
 	}
 
-	const FColor TraceColor = bHit ? FColor::Green : FColor::Red;
-
-	DrawDebugLine(GetWorld(), StartLocation, OutAimPoint, TraceColor, false, .5f, 0, 2.0f);
-
-	if (bHit)
+	if (DebugBullets)
 	{
-		DrawDebugSphere(GetWorld(), OutPlayerHit.ImpactPoint, 8.0f, 12, FColor::Green, false, .5f);
+		const FColor TraceColor = bHit ? FColor::Green : FColor::Red;
+
+		DrawDebugLine(GetWorld(), StartLocation, OutAimPoint, TraceColor, false, .5f, 0, .5f);
+
+		if (bHit)
+		{
+			DrawDebugSphere(GetWorld(), OutPlayerHit.ImpactPoint, 8.0f, 12, FColor::Green, false, .5f);
+		}
 	}
+	
 
 	return bHit;
 }
@@ -341,7 +425,7 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 	QueryParams.AddIgnoredActor(GetOwner());
 	QueryParams.bTraceComplex = bBulletTraceComplex;
 
-	
+
 
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(
 		OutWeaponHit,
@@ -350,6 +434,10 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 		BulletTraceChannel,
 		QueryParams
 	);
+	const FVector TracerEnd =
+		bHit ? OutWeaponHit.ImpactPoint : EndLocation;
+
+	SpawnBulletTracerEffect(StartLocation, TracerEnd);
 
 	if (bHit)
 	{
@@ -370,34 +458,35 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 		);
 	}
 
-	const FVector DebugEnd = bHit ? OutWeaponHit.ImpactPoint : EndLocation;
-	const FColor TraceColor = bHit ? FColor::Cyan : FColor::Orange;
-
-	DrawDebugLine(GetWorld(), StartLocation, DebugEnd, TraceColor, false, .5f, 0, 2.0f);
-
-	if (bHit)
+	if (DebugBullets)
 	{
-		DrawDebugSphere(GetWorld(), OutWeaponHit.ImpactPoint, 8.0f, 12, FColor::Cyan, false, .5f);
+		const FVector DebugEnd = bHit ? OutWeaponHit.ImpactPoint : EndLocation;
+		const FColor TraceColor = bHit ? FColor::Cyan : FColor::Orange;
+
+		DrawDebugLine(GetWorld(), StartLocation, DebugEnd, TraceColor, false, .5f, 0, .5f);
+
+		if (bHit)
+		{
+			DrawDebugSphere(GetWorld(), OutWeaponHit.ImpactPoint, 8.0f, 12, FColor::Cyan, false, .5f);
+		}
 	}
+
+	
 
 	return bHit;
 }
 
-void AWeaponBase::SetWeaponEquipped()
-{
-	if (!WeaponMesh) return;
-
-	WeaponMesh->SetSimulatePhysics(false);
-	WeaponMesh->SetEnableGravity(false);
-	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	SetActorHiddenInGame(false);
-	SetActorEnableCollision(false);
-}
+	//=====================================================
+	// HIT RESOLUTION
+	//=====================================================
 
 void AWeaponBase::ResolveBulletHitResult(const FHitResult& HitResult)
 {
-	DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, 2.f);
+	if (DebugBullets)
+	{
+		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, .5f);
+	}
+
 	if (USkeletalMeshComponent* CharacterMesh = Cast<USkeletalMeshComponent>(HitResult.GetComponent())) // if what we hit was a skeletal mesh
 	{
 		if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>()) // if the Hit actor has a health component
@@ -405,36 +494,22 @@ void AWeaponBase::ResolveBulletHitResult(const FHitResult& HitResult)
 			if (WasHeadShot(HitResult))
 			{
 				UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Head Shot"))
-				float HeadShotDamage = Damage * HeadShotDamageMultiplier;
+					float HeadShotDamage = Damage * HeadShotDamageMultiplier;
 				HealthComponent->ApplyDamage(HeadShotDamage);
 			}
 			else
 			{
 				UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Body Shot"))
-				HealthComponent->ApplyDamage(Damage);
-				
+					HealthComponent->ApplyDamage(Damage);
+
 			}
 		}
 	}
 }
 
-void AWeaponBase::PlayMuzzleFlashEffect()
-{
-	UNiagaraFunctionLibrary::SpawnSystemAttached(
-		MuzzleFlashEffect,
-		MuzzleLocation,
-		NAME_None,
-		FVector::ZeroVector,
-		FRotator(0.f, -90.f, 0.f), 
-		EAttachLocation::SnapToTarget,
-		true
-	);
-
-
-	
-
-
-}
+	//=====================================================
+	// AUDIO
+	//=====================================================
 
 void AWeaponBase::PlayFireSFX()
 {
@@ -461,42 +536,74 @@ void AWeaponBase::PlayReloadEndSFX()
 
 }
 
-bool AWeaponBase::WasHeadShot(const FHitResult& HitResult)
-{
-	if (HitResult.BoneName == TEXT("head"))
-	{
-		return true;
-	}
-	return false;
-}
+	//=====================================================
+	// VFX
+	//=====================================================
 
-bool AWeaponBase::IsMagazineEmpty() const
+void AWeaponBase::PlayMuzzleFlashEffect()
 {
-	if (AmmoInMagazine <= 0)
-	{
-		return true;
-	}
-	return false;
-}
-
-void  AWeaponBase::AddToAmmoInReserve(int32 AdditionalAmmo)
-{
-	AmmoInReserve += AdditionalAmmo;
-	;
-
-	UE_LOG(
-		LogTemp,
-		Log,
-		TEXT("[WeaponBase] Ammo added: %d | New ammo in reserve: %d"),
-		AdditionalAmmo,
-		AmmoInReserve
+	UNiagaraFunctionLibrary::SpawnSystemAttached(
+		MuzzleFlashEffect,
+		MuzzleLocation,
+		NAME_None,
+		FVector::ZeroVector,
+		FRotator(0.f, -90.f, 0.f),
+		EAttachLocation::SnapToTarget,
+		true
 	);
 
+
+
+
+
 }
 
-int32 AWeaponBase::GetAddedReserveAmmo() const
+void AWeaponBase::SpawnBulletTracerEffect(FVector MuzzlePosition, FVector ImpactPosition)
 {
-	return AddedReserveAmmo;
+	if (!TracerEffect || !GetWorld())
+	{
+		return;
+	}
+
+	UNiagaraComponent* TracerComponent =
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),
+			TracerEffect,
+			MuzzlePosition,
+			FRotator::ZeroRotator,
+			FVector::OneVector,
+			true,                  // Auto destroy
+			false,                 // Do not activate yet
+			ENCPoolMethod::None,
+			true                   // Pre-cull check
+		);
+
+	if (!TracerComponent)
+	{
+		return;
+	}
+
+	TracerComponent->SetVariableVec3(
+		TEXT("User.MuzzlePosition"), 
+		MuzzlePosition
+	);
+
+
+	// this is supposed to store an arrat of impact positons but we only have one so this is just adding one position
+	const TArray<FVector> ImpactPositions =
+	{
+		ImpactPosition
+	};
+
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(
+		TracerComponent,
+		TEXT("User.ImpactPositions"),
+		ImpactPositions
+	);
+
+	TracerComponent->SetVariableBool(TEXT("User.Trigger"), true);
+
+	TracerComponent->Activate(true);
+
 }
 
 	

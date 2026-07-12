@@ -201,16 +201,19 @@ bool ARemington870Weapon::CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVec
 			(int32)BulletTraceChannel.GetValue()
 		);
 	}
-
-	const FColor TraceColor = bHit ? FColor::Green : FColor::Red;
-
-	DrawDebugLine(GetWorld(), StartLocation, OutAimPoint, TraceColor, false, 2.0f, 0, 2.0f);
-
-	if (bHit)
+	if (DebugBullets)
 	{
-		DrawDebugSphere(GetWorld(), OutPlayerHit.ImpactPoint, 8.0f, 12, FColor::Green, false, 2.0f);
-	}
+		const FColor TraceColor = bHit ? FColor::Green : FColor::Red;
 
+		DrawDebugLine(GetWorld(), StartLocation, OutAimPoint, TraceColor, false, .5f, 0, .5f);
+
+		if (bHit)
+		{
+			DrawDebugSphere(GetWorld(), OutPlayerHit.ImpactPoint, 8.0f, 12, FColor::Green, false, .5f);
+		}
+
+	}
+	
 	return bHit;
 }
 
@@ -245,6 +248,11 @@ bool ARemington870Weapon::CreateWeaponBulletTrace(const FVector& AimPoint, FHitR
 		QueryParams
 	);
 
+	const FVector TracerEnd =
+		bHit ? OutWeaponHit.ImpactPoint : EndLocation;
+
+	SpawnBulletTracerEffect(StartLocation, TracerEnd);
+
 	if (bHit)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[WEAPON TRACE HIT] Actor: %s | Component: %s | Impact: %s | Distance: %f | Channel: %d"),
@@ -264,15 +272,19 @@ bool ARemington870Weapon::CreateWeaponBulletTrace(const FVector& AimPoint, FHitR
 		);
 	}
 
-	const FVector DebugEnd = bHit ? OutWeaponHit.ImpactPoint : EndLocation;
-	const FColor TraceColor = bHit ? FColor::Cyan : FColor::Orange;
-
-	DrawDebugLine(GetWorld(), StartLocation, DebugEnd, TraceColor, false, 2.0f, 0, 2.0f);
-
-	if (bHit)
+	if (DebugBullets)
 	{
-		DrawDebugSphere(GetWorld(), OutWeaponHit.ImpactPoint, 8.0f, 12, FColor::Cyan, false, 2.0f);
+		const FVector DebugEnd = bHit ? OutWeaponHit.ImpactPoint : EndLocation;
+		const FColor TraceColor = bHit ? FColor::Cyan : FColor::Orange;
+
+		DrawDebugLine(GetWorld(), StartLocation, DebugEnd, TraceColor, false, .5f, 0, .5f);
+
+		if (bHit)
+		{
+			DrawDebugSphere(GetWorld(), OutWeaponHit.ImpactPoint, 8.0f, 12, FColor::Cyan, false, .5f);
+		}
 	}
+	
 
 	return bHit;
 }
@@ -291,7 +303,10 @@ void ARemington870Weapon::ResolveBulletHitResults(const TArray<FHitResult>& HitR
 {
 	for (const FHitResult& HitResult : HitResults)
 	{
-			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, 2.f);
+		if (DebugBullets)
+		{
+			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, .5f);
+		}
 			if (USkeletalMeshComponent* CharacterMesh = Cast<USkeletalMeshComponent>(HitResult.GetComponent())) // if what we hit was a skeletal mesh
 			{
 				if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>()) // if the Hit actor has a health component

@@ -20,7 +20,8 @@ class TEMPLEFPS_API ARemington870Weapon : public APrimaryWeaponBase
 	
 
 public:
-
+	
+	//Firing
 	 void FireOnce() override;
 
 	 bool CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint) override;
@@ -28,7 +29,6 @@ public:
 	 bool CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& OutWeaponHit) override;
 
 	 bool CanFire() const override;
-
 
 	 UFUNCTION(BlueprintCallable)
 	  void ResolveBulletHitResults(const TArray<FHitResult>& HitResults);
