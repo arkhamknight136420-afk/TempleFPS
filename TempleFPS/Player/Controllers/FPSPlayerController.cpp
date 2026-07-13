@@ -14,6 +14,8 @@ void AFPSPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	IsInputingAim = false;
+
 	AFPSPlayerCharacterRef = Cast<AFPSPlayerCharacter>(InPawn);
 
 	if (!AFPSPlayerCharacterRef)
@@ -30,6 +32,15 @@ void AFPSPlayerController::OnPossess(APawn* InPawn)
 	}
 
 	
+}
+
+void AFPSPlayerController::OnUnPossess()
+{
+	IsInputingAim = false;
+	AFPSPlayerCharacterRef = nullptr;
+	PlayerBrain = nullptr;
+
+	Super::OnUnPossess();
 }
 
 void AFPSPlayerController::BeginPlay()

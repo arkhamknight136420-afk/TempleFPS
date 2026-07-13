@@ -10,6 +10,13 @@ class UDeathComponent;
 class ABaseAICharacter;
 class ABaseAIController;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+	FOnHealthChangedSignature,
+	float, CurrentHealth,
+	float, MaxHealth,
+	float, HealthDelta
+);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEMPLEFPS_API UHealthComponent : public UActorComponent
 {
@@ -21,6 +28,11 @@ public:
 
 	UDeathComponent* DeathComponent;
 
+	UPROPERTY(BlueprintAssignable, Category = "Health|Events")
+	FOnHealthChangedSignature OnHealthChanged;
+
+
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -30,11 +42,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void AddHealth(float InputHealthAmount);
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
+	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetCurrentHealth() const { return CurrentHealth; }
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
+	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetMaxHealth() const { return MaxHealth; }
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+		float GetHealthPercent() const
+	{
+		return MaxHealth > 0.f ? CurrentHealth / MaxHealth : 0.f;
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	bool IsDead() const { return bIsDead; }
@@ -44,16 +62,16 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Health")
-	float CurrentHealth;
+	float CurrentHealth = 100;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth = 100.f;
 
-	
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsDead = false;
 
 private:
 
-	bool bIsDead = false;
 
 
 };

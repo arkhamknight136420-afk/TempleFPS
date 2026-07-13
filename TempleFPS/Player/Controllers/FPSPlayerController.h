@@ -52,10 +52,10 @@ protected:
 	float VerticalSensitivityMultiplier = 1.0f;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
-	float ADSHorizontalSensitivityMultiplier = .5f;
+	float ADSHorizontalSensitivityMultiplier = .25f;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
-	float ADSVerticalSensitivityMultiplier =.5f;
+	float ADSVerticalSensitivityMultiplier = .25f;
 
 
 
@@ -100,6 +100,8 @@ protected:
 
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void OnUnPossess() override;
 
 
 	virtual void SetupInputComponent() override;

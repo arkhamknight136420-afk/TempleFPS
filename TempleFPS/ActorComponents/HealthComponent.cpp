@@ -48,44 +48,76 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::ApplyDamage(float InputDamageAmount)
 {
-	UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] ApplyDamage called on owner: %s"),
-		GetOwner() ? *GetOwner()->GetName() : TEXT("NULL"));
-	if (bIsDead) return;
-
-	CurrentHealth -= InputDamageAmount;
-
-	UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] %s took %f damage, current health is %f"),
-		*GetOwner()->GetName(), InputDamageAmount, CurrentHealth);
-
-	if (ABaseAICharacter* AICharacterRef = Cast<ABaseAICharacter>(GetOwner()))
+	if (bIsDead || InputDamageAmount <= 0.f)
 	{
-		UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] Owner is an AI Character"));
-
-		if (ABaseAIController* AIControllerRef = Cast<ABaseAIController>(AICharacterRef->GetController()))
-		{
-			AIControllerRef->SetPlayerBlackBoardKey();
-
-			UE_LOG(LogTemp, Log, TEXT("[HEALTH COMPONENT] Set PlayerBlackBoardKey on AI Controller"));
-		}
+		return;
 	}
 
-	if (CurrentHealth <= 0.f)
+	const float PreviousHealth = CurrentHealth;
+
+	CurrentHealth = FMath::Clamp(
+		CurrentHealth - InputDamageAmount,
+		0.f,
+		MaxHealth
+	);
+
+	const float HealthDelta = CurrentHealth - PreviousHealth;
+	const bool bJustDied = CurrentHealth <= 0.f;
+
+	if (bJustDied)
+	{
+		bIsDead = true;
+	}
+
+	OnHealthChanged.Broadcast(
+		CurrentHealth,
+		MaxHealth,
+		HealthDelta
+	);
+
+	// Keep your AI reaction logic here.
+
+	if (bJustDied)
 	{
 		if (DeathComponent)
 		{
 			DeathComponent->HandleDeath();
-			bIsDead = true;
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("[HEALTH COMPONENT] HealthComponent on %s has no reference to DeathComponent"),
-				*GetOwner()->GetName());
+			UE_LOG(
+				LogTemp,
+				Error,
+				TEXT("HealthComponent on %s has no DeathComponent"),
+				*GetOwner()->GetName()
+			);
 		}
 	}
 }
+
 void UHealthComponent::AddHealth(float InputHealthAmount)
 {
+	if (bIsDead || InputHealthAmount <= 0.f)
+	{
+		return;
+	}
 
-	CurrentHealth = CurrentHealth + InputHealthAmount;
+	const float PreviousHealth = CurrentHealth;
 
+	CurrentHealth = FMath::Clamp(
+		CurrentHealth + InputHealthAmount,
+		0.f,
+		MaxHealth
+	);
+
+	const float HealthDelta = CurrentHealth - PreviousHealth;
+
+	if (!FMath::IsNearlyZero(HealthDelta))
+	{
+		OnHealthChanged.Broadcast(
+			CurrentHealth,
+			MaxHealth,
+			HealthDelta
+		);
+	}
 }
