@@ -17,6 +17,12 @@ class UHealthComponent;
 class UDeathComponent;
 class UUCharacterAudioComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnInteractionChanged,
+	FString, InteractionText
+);
+
+
 UCLASS()
 class TEMPLEFPS_API AFPSPlayerCharacter : public ABaseCharacter
 {
@@ -29,6 +35,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 
+	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+	FOnInteractionChanged OnInteractionChanged;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* SpringArmComponent;

@@ -14,4 +14,6 @@ class TEMPLEFPS_API ABarrettM82Weapon : public APrimaryWeaponBase
 {
 	GENERATED_BODY()
 	
+public:
+	virtual FString GetPromptText_Implementation() override;
 };

@@ -72,7 +72,7 @@ void AWeaponBase::Interact_Implementation(AActor* Interactor)
 
 FString AWeaponBase::GetPromptText_Implementation()
 {
-	return TEXT("Pick Up Weapon");
+	return TEXT("Pick Up Weapon (E)");
 }
 
 	//=====================================================
@@ -150,6 +150,8 @@ void AWeaponBase::FireOnce()
 	}
 
 	AmmoInMagazine--;
+
+	// BROAD CAST ON AMMO CHANGED
 
 	bCanFire = false;
 	IsShooting = true;

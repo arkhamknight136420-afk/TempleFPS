@@ -11,6 +11,8 @@
 #include "../../ActorComponents/UCharacterAudioComponent.h"
 #include "../../Characters/BaseCharacter.h"
 
+
+
 AFPSPlayerCharacter::AFPSPlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -56,11 +58,11 @@ AFPSPlayerCharacter::AFPSPlayerCharacter()
 	InteractionCapsule->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionCapsule->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
 	InteractionCapsule->SetRelativeLocation(
-		FVector(SpringArmComponent->TargetArmLength + InteractionCapsule->GetScaledCapsuleHalfHeight() + 60.f, 0.f, 0.f)
+		FVector(SpringArmComponent->TargetArmLength + InteractionCapsule->GetScaledCapsuleHalfHeight() + 84.f, 0.f, 0.f)
 	);
 	InteractionCapsule->SetRelativeRotation(FRotator(-90, 0, 0));
-	InteractionCapsule->SetCapsuleHalfHeight(125.f);
-	InteractionCapsule->SetCapsuleRadius(25.f);
+	InteractionCapsule->SetCapsuleHalfHeight(170.0f);
+	InteractionCapsule->SetCapsuleRadius(35.0f);
 
 	EyesLocation->SetupAttachment(PlayerCamera);
 	EyesLocation->SetRelativeLocation(FVector(300.f, 0.f, 0.f));
@@ -126,6 +128,12 @@ void AFPSPlayerCharacter::OnInteractionCapsuleBeginOverlap(
 		CurrentInteractableActor = OtherActor;
 		UE_LOG(LogTemp, Warning, TEXT("CurrentInteractableActor Added"));
 
+		FString InteractionText = IInteractionInterface::Execute_GetPromptText(OtherActor);
+
+		OnInteractionChanged.Broadcast(
+			InteractionText
+		);
+
 	}
 }
 
@@ -141,6 +149,13 @@ void AFPSPlayerCharacter::OnInteractionCapsuleEndOverlap(
 	if (CurrentInteractableActor)
 	{
 		CurrentInteractableActor = nullptr;
+
+		FString EmptyString;
+
+		OnInteractionChanged.Broadcast(
+			EmptyString
+		);
+		
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("CurrentInteractableActor Removed"));
@@ -154,6 +169,7 @@ void AFPSPlayerCharacter::HandleInteract()
 		
 		IInteractionInterface::Execute_Interact(CurrentInteractableActor, this);
 	}
+
 }
 
 void AFPSPlayerCharacter::StartJumpMovement()

@@ -8,6 +8,10 @@
 #include "../../../Characters/BaseCharacter.h"
 #include"../../../ActorComponents/HealthComponent.h"
 
+FString ARemington870Weapon::GetPromptText_Implementation()
+{
+	return TEXT("Pick Up Shot Gun (E)");
+}
 void ARemington870Weapon::FireOnce()
 {
 	if (!CanFire())

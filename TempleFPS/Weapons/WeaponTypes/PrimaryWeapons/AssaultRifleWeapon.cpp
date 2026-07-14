@@ -3,7 +3,7 @@
 
 FString AAssaultRifleWeapon::GetPromptText_Implementation()
 {
-	return FString(TEXT("Press E to pick up Assault Rifle"));
+	return FString(TEXT("Pick Up Assault Rifle (E)"));
 }
 
 void AAssaultRifleWeapon::StartFire()

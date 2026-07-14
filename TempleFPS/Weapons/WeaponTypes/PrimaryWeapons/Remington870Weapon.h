@@ -20,7 +20,7 @@ class TEMPLEFPS_API ARemington870Weapon : public APrimaryWeaponBase
 	
 
 public:
-	
+	virtual FString GetPromptText_Implementation() override;
 	//Firing
 	 void FireOnce() override;
 

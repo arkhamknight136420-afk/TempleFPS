@@ -135,6 +135,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void AddToAmmoInReserve(int32 AdditionalAmmo);
 
+	//ONAMMOCHANGEDDELAGATE
+
 
 protected:
 
