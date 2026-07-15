@@ -12,6 +12,7 @@ FString ARemington870Weapon::GetPromptText_Implementation()
 {
 	return TEXT("Pick Up Shot Gun (E)");
 }
+
 void ARemington870Weapon::FireOnce()
 {
 	if (!CanFire())
@@ -27,6 +28,12 @@ void ARemington870Weapon::FireOnce()
 	bIsChamberingRound = false;
 	AmmoInMagazine--;
 
+	OnAmmoChanged.Broadcast(
+		AmmoInMagazine,
+		MagazineSize,
+		-1
+	);
+
 	bRoundChambered = false;
 	bCanFire = false;
 	IsShooting = true;
@@ -41,10 +48,13 @@ void ARemington870Weapon::FireOnce()
 		false
 	);
 
-	UE_LOG(LogTemp, Warning, TEXT("[REMINGTON] Fired: %s | Ammo: %d / %d"),
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("[REMINGTON] Fired: %s | Ammo: %d / %d"),
 		*GetName(),
 		AmmoInMagazine,
-		AmmoInReserve
+		MagazineSize
 	);
 	PelletHitResults.Empty();
 
@@ -443,4 +453,29 @@ bool ARemington870Weapon::CanReload() const
 	}
 
 	return true;
+}
+
+int32 ARemington870Weapon::AddAmmo(int32 AdditionalAmmo)
+{
+	const bool bWasEmpty = AmmoInMagazine <= 0;
+
+	const int32 ActualAmmoAdded =
+		Super::AddAmmo(AdditionalAmmo);
+
+	if (ActualAmmoAdded > 0 && bWasEmpty)
+	{
+		bRoundChambered = true;
+		bIsChamberingRound = false;
+		bIsReloading = false;
+
+		GetWorldTimerManager().ClearTimer(
+			ReloadFinishedTimerHandle
+		);
+
+		GetWorldTimerManager().ClearTimer(
+			AmmoInsertTimerHandle
+		);
+	}
+
+	return ActualAmmoAdded;
 }

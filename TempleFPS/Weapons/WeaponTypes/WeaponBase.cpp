@@ -44,6 +44,8 @@ void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MagazineSize = FMath::Max(MagazineSize, 0);
+
 	AmmoInMagazine = FMath::Clamp(AmmoInMagazine, 0, MagazineSize);
 }
 
@@ -151,7 +153,11 @@ void AWeaponBase::FireOnce()
 
 	AmmoInMagazine--;
 
-	// BROAD CAST ON AMMO CHANGED
+	OnAmmoChanged.Broadcast(
+		AmmoInMagazine,
+		MagazineSize,
+		-1
+	);
 
 	bCanFire = false;
 	IsShooting = true;
@@ -167,10 +173,13 @@ void AWeaponBase::FireOnce()
 		false
 	);
 
-	UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Fired: %s | Ammo: %d / %d"),
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("[WEAPON] Fired: %s | Ammo: %d / %d"),
 		*GetName(),
 		AmmoInMagazine,
-		AmmoInReserve
+		MagazineSize
 	);
 
 	FHitResult PlayerHit;
@@ -315,25 +324,46 @@ bool AWeaponBase::IsMagazineEmpty() const
 	return false;
 }
 
-void  AWeaponBase::AddToAmmoInReserve(int32 AdditionalAmmo)
+int32 AWeaponBase::AddAmmo(int32 AdditionalAmmo)
 {
-	AmmoInReserve += AdditionalAmmo;
-	;
+	if (AdditionalAmmo <= 0)
+	{
+		return 0;
+	}
 
+	const int32 PreviousAmmo = AmmoInMagazine;
+
+	AmmoInMagazine = FMath::Clamp(
+		AmmoInMagazine + AdditionalAmmo,
+		0,
+		MagazineSize
+	);
+
+	const int32 ActualAmmoAdded = AmmoInMagazine - PreviousAmmo;
+
+	if (ActualAmmoAdded <= 0)
+	{
+		return 0;
+	}
+
+	OnAmmoChanged.Broadcast(
+		AmmoInMagazine,
+		MagazineSize,
+		ActualAmmoAdded
+	);
 	UE_LOG(
 		LogTemp,
 		Log,
-		TEXT("[WeaponBase] Ammo added: %d | New ammo in reserve: %d"),
-		AdditionalAmmo,
-		AmmoInReserve
+		TEXT("[WeaponBase] Added %d ammo | Ammo: %d / %d"),
+		ActualAmmoAdded,
+		AmmoInMagazine,
+		MagazineSize
 	);
 
+	return ActualAmmoAdded;
 }
 
-int32 AWeaponBase::GetAddedReserveAmmo() const
-{
-	return AddedReserveAmmo;
-}
+
 
 	//=====================================================
 	// BULLET TRACING

@@ -13,6 +13,15 @@ class ABaseCharacter;
 class UInventoryComponent;
 class UHealthComponent;
 class UNiagaraSystem;
+class UTextur2d;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+	FOnWeaponAmmoChangedSignature,
+	int32, CurrentAmmo,
+	int32, MaximumAmmo,
+	int32, AmmoDelta
+);
+
 
 UCLASS()
 class TEMPLEFPS_API AWeaponBase : public AActor, public IInteractionInterface
@@ -127,13 +136,43 @@ public:
 	// AMMUNITION
 	//=====================================================
 
+	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
+	FOnWeaponAmmoChangedSignature OnAmmoChanged;
+
 	UFUNCTION()
 	bool IsMagazineEmpty() const;
 
-	int32 GetAddedReserveAmmo() const;
+	UFUNCTION(BlueprintPure, Category = "Weapon | Ammo")
+	int32 GetCurrentAmmo() const
+	{
+		return AmmoInMagazine;
+	}
 
-	UFUNCTION(BlueprintCallable)
-	virtual void AddToAmmoInReserve(int32 AdditionalAmmo);
+	UFUNCTION(BlueprintPure, Category = "Weapon | Ammo")
+	int32 GetMaximumAmmo() const
+	{
+		return MagazineSize;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Weapon|Ammo")
+	int32 GetAmmoGrantedPerPickup() const
+	{
+		return AddedReserveAmmo;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Weapon | UI")
+	UTexture2D* GetWeaponIcon() const
+	{
+		return WeaponIcon.Get();
+	}
+
+	
+
+	
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Ammo")
+	virtual int32 AddAmmo(int32 AdditionalAmmo);
+
 
 	//ONAMMOCHANGEDDELAGATE
 
@@ -311,4 +350,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
 	UNiagaraSystem* TracerEffect;
+
+
+	//=====================================================
+	// UI
+	//=====================================================
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|UI")
+	TObjectPtr<UTexture2D> WeaponIcon = nullptr;
 };

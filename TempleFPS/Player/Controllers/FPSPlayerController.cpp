@@ -140,8 +140,7 @@ void AFPSPlayerController::SetupInputComponent()
 void AFPSPlayerController::Input_Move(const FInputActionValue& Value)
 {
 	const FVector2D MoveInput = Value.Get<FVector2D>();
-	UE_LOG(LogTemp, Warning, TEXT("[INPUT] Input_Move fired: X=%f Y=%f"), MoveInput.X, MoveInput.Y);
-
+	
 	if (!PlayerBrain)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[INPUT] PlayerBrain is NULL"));
@@ -295,7 +294,6 @@ void AFPSPlayerController::Input_Shoot_Start(const FInputActionValue& Value)
 
 void AFPSPlayerController::Input_Shoot_End(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[SHOOT INPUT] COMPLETED"));
 
 	if (!AFPSPlayerCharacterRef)
 	{

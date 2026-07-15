@@ -33,6 +33,8 @@ public:
 	 UFUNCTION(BlueprintCallable)
 	  void ResolveBulletHitResults(const TArray<FHitResult>& HitResults);
 
+	  virtual int32 AddAmmo(int32 AdditionalAmmo) override;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Pellet")

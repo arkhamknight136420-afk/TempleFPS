@@ -122,11 +122,11 @@ void AFPSPlayerCharacter::OnInteractionCapsuleBeginOverlap(
 	const FHitResult& SweepResult
 )
 {
-	UE_LOG(LogTemp, Warning, TEXT("Begin OVERLAP"));
+	UE_LOG(LogTemp, Log, TEXT("Begin OVERLAP"));
 	if (OtherActor->Implements<UInteractionInterface>())
 	{
 		CurrentInteractableActor = OtherActor;
-		UE_LOG(LogTemp, Warning, TEXT("CurrentInteractableActor Added"));
+		UE_LOG(LogTemp, Log, TEXT("CurrentInteractableActor Added"));
 
 		FString InteractionText = IInteractionInterface::Execute_GetPromptText(OtherActor);
 
@@ -144,7 +144,7 @@ void AFPSPlayerCharacter::OnInteractionCapsuleEndOverlap(
 	int32 OtherBodyIndex
 )
 {
-	UE_LOG(LogTemp, Warning, TEXT("End OVERLAP"));
+	UE_LOG(LogTemp, Log, TEXT("End OVERLAP"));
 
 	if (CurrentInteractableActor)
 	{
@@ -158,7 +158,7 @@ void AFPSPlayerCharacter::OnInteractionCapsuleEndOverlap(
 		
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("CurrentInteractableActor Removed"));
+	UE_LOG(LogTemp, Log, TEXT("CurrentInteractableActor Removed"));
 	
 }
 
@@ -196,7 +196,7 @@ void AFPSPlayerCharacter::StopCrouchMovement()
 
 void AFPSPlayerCharacter::HandleDirectionalMovement(FVector2D MoveInput)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[CHARACTER] HandleDirectionalMovement: X=%f Y=%f"), MoveInput.X, MoveInput.Y);
+	UE_LOG(LogTemp, VeryVerbose, TEXT("[CHARACTER] HandleDirectionalMovement: X=%f Y=%f"), MoveInput.X, MoveInput.Y);
 
 	AddMovementInput(GetActorForwardVector(), MoveInput.Y);
 	AddMovementInput(GetActorRightVector(), MoveInput.X);
@@ -282,7 +282,7 @@ void AFPSPlayerCharacter::StartAiming()
 	IsInterpolatingAim = true;
 	IsAiming = true;
 	
-	UE_LOG(LogTemp,Warning, TEXT("[AIMING] Started Aiming Called "))
+	
 	
 }
 
@@ -290,7 +290,7 @@ void AFPSPlayerCharacter::StopAiming()
 {
 	IsAiming = false;
 	IsInterpolatingAim = true;
-	UE_LOG(LogTemp, Warning, TEXT("[AIMING] Stop Aiming Called "))
+	
 
 }
 
@@ -311,35 +311,35 @@ void AFPSPlayerCharacter::HandleADSInterpolation()
 {
 	if (IsAiming)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[AIMING] Is Aiming is true"))
+		
 
 		if (PlayerCamera->FieldOfView == ADSFieldOfView)
 		{
 
 			IsInterpolatingAim = false;
-			UE_LOG(LogTemp, Warning, TEXT("[AIMING] Player field of view is equal to ADS Interpolating Aim set false"))
+			
 
 
 		}
 		else
 		{
 			PlayerCamera->FieldOfView = FMath::FInterpConstantTo(PlayerCamera->FieldOfView, ADSFieldOfView, GetWorld()->GetDeltaSeconds(), AimInterpSpeed);
-			UE_LOG(LogTemp, Warning, TEXT("[AIMING] Interpolating player field of view to ADS field of View"))
+			
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[AIMING] Is Aiming is false")) 
+		
 		if (PlayerCamera->FieldOfView == DefaultFieldOfView)
 		{
 			IsInterpolatingAim = false;
 
-			UE_LOG(LogTemp, Warning, TEXT("[AIMING] Player field of view is equal to default. Interpolating Aim set false"))
+			
 		}
 		else
 		{
 			PlayerCamera->FieldOfView = FMath::FInterpConstantTo(PlayerCamera->FieldOfView, DefaultFieldOfView, GetWorld()->GetDeltaSeconds(), AimInterpSpeed);
-			UE_LOG(LogTemp, Warning, TEXT("[AIMING] Interpolating player field of view to default field of view"))
+			
 		}
 	}
 }

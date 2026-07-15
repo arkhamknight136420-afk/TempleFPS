@@ -12,6 +12,12 @@ class ASecondaryWeaponBase;
 class AFPSPlayerCharacter;
 class ABaseAICharacter;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnCurrentWeaponChangedSignature,
+	AWeaponBase*, CurrentWeapon
+);
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TEMPLEFPS_API UInventoryComponent : public UActorComponent
 {
@@ -20,6 +26,26 @@ class TEMPLEFPS_API UInventoryComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UInventoryComponent();
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapons|Events")
+	FOnCurrentWeaponChangedSignature OnCurrentWeaponChanged;
+
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	void PickUpWeapon(TSubclassOf<AWeaponBase> WeaponClass);
+
+	void EquipPrimaryWeapon();
+
+	void EquipSecondaryWeapon();
+
+	AWeaponBase* GetCurrentHeldWeapon() const { return CurrentHeldWeapon; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons|Defaults")
+	TSubclassOf<APrimaryWeaponBase> DefaultPrimaryWeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons|Defaults")
+	TSubclassOf<ASecondaryWeaponBase> DefaultSecondaryWeaponClass;
 
 
 protected:
@@ -38,23 +64,7 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapons|Runtime")
 	AWeaponBase* CurrentHeldWeapon = nullptr;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void PickUpWeapon(TSubclassOf<AWeaponBase> WeaponClass);
-
-	void EquipPrimaryWeapon();	
-
-	void EquipSecondaryWeapon();
-
-	AWeaponBase* GetCurrentHeldWeapon() const { return CurrentHeldWeapon; }
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons|Defaults")
-	TSubclassOf<APrimaryWeaponBase> DefaultPrimaryWeaponClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons|Defaults")
-	TSubclassOf<ASecondaryWeaponBase> DefaultSecondaryWeaponClass;
 
 
 	

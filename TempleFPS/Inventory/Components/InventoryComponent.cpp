@@ -9,6 +9,7 @@
 
 #include "GameFramework/Character.h"
 
+
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
@@ -23,6 +24,10 @@ void UInventoryComponent::BeginPlay()
 	if (DefaultPrimaryWeaponClass)
 	{
 		PickUpWeapon(DefaultPrimaryWeaponClass);
+
+	
+
+
 	}
 	else if (DefaultSecondaryWeaponClass)
 	{
@@ -72,17 +77,12 @@ void UInventoryComponent::PickUpWeapon(
 	if (IsValid(CurrentHeldWeapon) &&
 		WeaponClass == CurrentHeldWeapon->GetClass())
 	{
-		CurrentHeldWeapon->AddToAmmoInReserve(
-			CurrentHeldWeapon->GetAddedReserveAmmo()
-		);
+		const int32 RequestedAmmo = CurrentHeldWeapon->GetAmmoGrantedPerPickup();
 
-		UE_LOG(
-			LogTemp,
-			Log,
-			TEXT("[InventoryComponent] Picked up the same weapon. Added reserve ammo instead.")
-		);
+		const int32 ActualAmmoAdded = CurrentHeldWeapon->AddAmmo(RequestedAmmo);
 
 		return;
+
 	}
 
 	ACharacter* CharacterOwner = Cast<ACharacter>(GetOwner());
@@ -191,6 +191,7 @@ void UInventoryComponent::EquipPrimaryWeapon()
 
 		return;
 	}
+	AWeaponBase* PreviousHeldWeapon = CurrentHeldWeapon;
 
 	if (CurrentHeldWeapon)
 	{
@@ -227,6 +228,11 @@ void UInventoryComponent::EquipPrimaryWeapon()
 		TEXT("Equipped Primary Weapon: %s"),
 		*PrimaryWeapon->GetName()
 	);
+
+	if (PreviousHeldWeapon != CurrentHeldWeapon)
+	{
+		OnCurrentWeaponChanged.Broadcast(CurrentHeldWeapon);
+	}
 }
 
 void UInventoryComponent::EquipSecondaryWeapon()
