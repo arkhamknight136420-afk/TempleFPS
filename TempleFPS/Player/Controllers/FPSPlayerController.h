@@ -4,10 +4,12 @@
 #include "GameFramework/PlayerController.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "../../UI/Enums/DamageNumberTypes.h"
 #include "FPSPlayerController.generated.h"
 
 class AFPSPlayerCharacter;
 class UFPSBrainComponent;
+class ADamageNumberActor;
 
 
 /**
@@ -20,7 +22,12 @@ class TEMPLEFPS_API  AFPSPlayerController : public APlayerController
 
 public: 
 
-	
+	void ShowDamageNumber(
+		float DamageAmount,
+		EDamageNumberType DamageNumberType,
+		const FVector& WorldLocation
+	);
+
 protected:
 
 	//Brain Reference
@@ -30,7 +37,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input")
 	UInputMappingContext* PlayerMappingContext;
 
-	
+	UPROPERTY(
+		EditDefaultsOnly,
+		Category = "UI|Damage Numbers"
+	)
+	TSubclassOf<ADamageNumberActor> DamageNumberActorClass;
 
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Movement")

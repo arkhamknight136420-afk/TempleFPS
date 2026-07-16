@@ -2,11 +2,33 @@
 
 
 #include "Remington870Weapon.h"
+
 #include "../../../Player/Characters/FPSPlayerCharacter.h"
+#include "../../../Player/Controllers/FPSPlayerController.h"
+#include "../../../AI/Characters/BaseAICharacter.h"
+#include "../../../Characters/BaseCharacter.h"
+#include "../../../ActorComponents/HealthComponent.h"
+#include "../../../UI/Enums/DamageNumberTypes.h"
+
+#include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
-#include "../../../Characters/BaseCharacter.h"
-#include"../../../ActorComponents/HealthComponent.h"
+
+namespace
+{
+	struct FShotgunTargetDamage
+	{
+		UHealthComponent* HealthComponent = nullptr;
+
+		float TotalDamage = 0.f;
+
+		FVector ImpactPointTotal = FVector::ZeroVector;
+
+		int32 PelletHitCount = 0;
+
+		bool bHadHeadShot = false;
+	};
+}
 
 FString ARemington870Weapon::GetPromptText_Implementation()
 {
@@ -313,32 +335,168 @@ FRotator ARemington870Weapon::CreateRandomSpread()
 
 }
 
-void ARemington870Weapon::ResolveBulletHitResults(const TArray<FHitResult>& HitResults)
+void ARemington870Weapon::ResolveBulletHitResults(
+	const TArray<FHitResult>& HitResults
+)
 {
+	// Each damaged actor receives one accumulated entry.
+	TMap<AActor*, FShotgunTargetDamage> DamageByActor;
+
+	//=====================================================
+	// ACCUMULATE PELLET DAMAGE
+	//=====================================================
+
 	for (const FHitResult& HitResult : HitResults)
 	{
 		if (DebugBullets)
 		{
-			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, .5f);
+			DrawDebugSphere(
+				GetWorld(),
+				HitResult.ImpactPoint,
+				20.f,
+				16,
+				FColor::Yellow,
+				false,
+				0.5f
+			);
 		}
-			if (USkeletalMeshComponent* CharacterMesh = Cast<USkeletalMeshComponent>(HitResult.GetComponent())) // if what we hit was a skeletal mesh
-			{
-				if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>()) // if the Hit actor has a health component
-				{
-					if (WasHeadShot(HitResult))
-					{
-						UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Head Shot"))
-							float HeadShotDamage = Damage * HeadShotDamageMultiplier;
-						HealthComponent->ApplyDamage(HeadShotDamage);
-					}
-					else
-					{
-						UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Body Shot"))
-							HealthComponent->ApplyDamage(Damage);
 
-					}
-				}
-			}
+		AActor* HitActor = HitResult.GetActor();
+
+		if (!HitActor)
+		{
+			continue;
+		}
+
+		if (!Cast<USkeletalMeshComponent>(
+			HitResult.GetComponent()
+		))
+		{
+			continue;
+		}
+
+		UHealthComponent* HealthComponent =
+			HitActor->GetComponentByClass<UHealthComponent>();
+
+		if (!HealthComponent || HealthComponent->IsDead())
+		{
+			continue;
+		}
+
+		const bool bHeadShot = WasHeadShot(HitResult);
+
+		const float PelletDamage = bHeadShot
+			? Damage * HeadShotDamageMultiplier
+			: Damage;
+
+		FShotgunTargetDamage& TargetDamage =
+			DamageByActor.FindOrAdd(HitActor);
+
+		TargetDamage.HealthComponent = HealthComponent;
+		TargetDamage.TotalDamage += PelletDamage;
+		TargetDamage.ImpactPointTotal += HitResult.ImpactPoint;
+		TargetDamage.PelletHitCount++;
+
+		if (bHeadShot)
+		{
+			TargetDamage.bHadHeadShot = true;
+		}
+	}
+
+	// Determine once whether the shotgun belongs to the local player.
+	AFPSPlayerCharacter* PlayerShooter =
+		Cast<AFPSPlayerCharacter>(GetOwner());
+
+	AFPSPlayerController* PlayerController = nullptr;
+
+	if (PlayerShooter &&
+		PlayerShooter->IsLocallyControlled())
+	{
+		PlayerController =
+			Cast<AFPSPlayerController>(
+				PlayerShooter->GetController()
+			);
+	}
+
+	//=====================================================
+	// APPLY TOTAL DAMAGE AND DISPLAY ONE NUMBER PER ACTOR
+	//=====================================================
+
+	for (auto& DamagePair : DamageByActor)
+	{
+		AActor* DamagedActor = DamagePair.Key;
+
+		FShotgunTargetDamage& TargetDamage =
+			DamagePair.Value;
+
+		if (!IsValid(DamagedActor) ||
+			!IsValid(TargetDamage.HealthComponent) ||
+			TargetDamage.HealthComponent->IsDead() ||
+			TargetDamage.PelletHitCount <= 0 ||
+			TargetDamage.TotalDamage <= 0.f)
+		{
+			continue;
+		}
+
+		// Damage is applied once using the combined pellet total.
+		TargetDamage.HealthComponent->ApplyDamage(
+			TargetDamage.TotalDamage
+		);
+
+		// The target was confirmed alive immediately before applying
+		// the accumulated damage.
+		const bool bJustDied =
+			TargetDamage.HealthComponent->IsDead();
+
+		EDamageNumberType DamageNumberType =
+			EDamageNumberType::BodyShot;
+
+		if (bJustDied)
+		{
+			DamageNumberType =
+				EDamageNumberType::Kill;
+		}
+		else if (TargetDamage.bHadHeadShot)
+		{
+			DamageNumberType =
+				EDamageNumberType::HeadShot;
+		}
+
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT(
+				"[Remington] %d pellets hit %s for %.1f "
+				"total damage"
+			),
+			TargetDamage.PelletHitCount,
+			*DamagedActor->GetName(),
+			TargetDamage.TotalDamage
+		);
+
+		// Damage applies for all shooters, but only the local
+		// player receives damage-number UI.
+		if (!PlayerController ||
+			!Cast<ABaseAICharacter>(DamagedActor))
+		{
+			continue;
+		}
+
+		const FVector AverageImpactPoint =
+			TargetDamage.ImpactPointTotal /
+			static_cast<float>(
+				TargetDamage.PelletHitCount
+				);
+
+		const FVector DamageNumberLocation =
+			AverageImpactPoint +
+			FVector::UpVector * 25.f;
+
+		PlayerController->ShowDamageNumber(
+			TargetDamage.TotalDamage,
+			DamageNumberType,
+			DamageNumberLocation
+		);
 	}
 }
 

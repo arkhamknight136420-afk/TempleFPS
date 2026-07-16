@@ -1,73 +1,70 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "PrimaryWeaponBase.h"
 #include "Remington870Weapon.generated.h"
 
-
-/**
- * 
- */
-
-class UHealthComponent;
-
 UCLASS()
-class TEMPLEFPS_API ARemington870Weapon : public APrimaryWeaponBase
+class TEMPLEFPS_API ARemington870Weapon
+	: public APrimaryWeaponBase
 {
 	GENERATED_BODY()
-	
 
 public:
+
 	virtual FString GetPromptText_Implementation() override;
-	//Firing
-	 void FireOnce() override;
 
-	 bool CreatePlayerBulletTrace(FHitResult& OutPlayerHit, FVector& OutAimPoint) override;
+	virtual void FireOnce() override;
 
-	 bool CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& OutWeaponHit) override;
+	virtual bool CreatePlayerBulletTrace(
+		FHitResult& OutPlayerHit,
+		FVector& OutAimPoint
+	) override;
 
-	 bool CanFire() const override;
+	virtual bool CreateWeaponBulletTrace(
+		const FVector& AimPoint,
+		FHitResult& OutWeaponHit
+	) override;
 
-	 UFUNCTION(BlueprintCallable)
-	  void ResolveBulletHitResults(const TArray<FHitResult>& HitResults);
+	virtual bool CanFire() const override;
 
-	  virtual int32 AddAmmo(int32 AdditionalAmmo) override;
+	UFUNCTION(BlueprintCallable)
+	void ResolveBulletHitResults(
+		const TArray<FHitResult>& HitResults
+	);
+
+	virtual int32 AddAmmo(int32 AdditionalAmmo) override;
 
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Pellet")
-	float PelletSpreadAngle = 5.0f; // Degrees	
+	float PelletSpreadAngle = 5.0f;
 
 	UFUNCTION(BlueprintCallable)
 	FRotator CreateRandomSpread();
 
-	
-	 void Reload()override;
+	virtual void Reload() override;
 
-	  void TryFire() override;
+	virtual void TryFire() override;
 
-	 void InsertAmmoIntoMagazine()override;
+	virtual void InsertAmmoIntoMagazine() override;
 
-	 virtual bool CanReload() const;
+	virtual bool CanReload() const override;
 
-	 void FinishReload() override;
+	virtual void FinishReload() override;
 
-	  void ResetFireCooldown() override;
+	virtual void ResetFireCooldown() override;
 
-	 UPROPERTY(BlueprintReadOnly, Category = "State")
-	 bool bLoopReload = true;
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bLoopReload = true;
 
-	 UPROPERTY(BlueprintReadOnly, Category = "State")
-	 bool bRoundChambered = true;
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bRoundChambered = true;
 
-	 UPROPERTY(BlueprintReadOnly, Category = "State")
-	 bool bIsChamberingRound = false;
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bIsChamberingRound = false;
 
 private:
-
-	
 
 	TArray<FHitResult> PelletHitResults;
 };

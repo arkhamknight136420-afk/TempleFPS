@@ -11,6 +11,9 @@
 #include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "../../Player/Controllers/FPSPlayerController.h"
+#include "../../AI/Characters/BaseAICharacter.h"
+#include "../../UI/Enums/DamageNumberTypes.h"
 
 
 	//=====================================================
@@ -512,31 +515,140 @@ bool AWeaponBase::CreateWeaponBulletTrace(const FVector& AimPoint, FHitResult& O
 	// HIT RESOLUTION
 	//=====================================================
 
-void AWeaponBase::ResolveBulletHitResult(const FHitResult& HitResult)
+void AWeaponBase::ResolveBulletHitResult(
+	const FHitResult& HitResult
+)
 {
 	if (DebugBullets)
 	{
-		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 20.f, 16, FColor::Yellow, false, .5f);
+		DrawDebugSphere(
+			GetWorld(),
+			HitResult.ImpactPoint,
+			20.f,
+			16,
+			FColor::Yellow,
+			false,
+			0.5f
+		);
 	}
 
-	if (USkeletalMeshComponent* CharacterMesh = Cast<USkeletalMeshComponent>(HitResult.GetComponent())) // if what we hit was a skeletal mesh
+	AActor* HitActor = HitResult.GetActor();
+
+	if (!HitActor)
 	{
-		if (UHealthComponent* HealthComponent = HitResult.GetActor()->GetComponentByClass<UHealthComponent>()) // if the Hit actor has a health component
-		{
-			if (WasHeadShot(HitResult))
-			{
-				UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Head Shot"))
-					float HeadShotDamage = Damage * HeadShotDamageMultiplier;
-				HealthComponent->ApplyDamage(HeadShotDamage);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Log, TEXT("[WEAPON BASE] Body Shot"))
-					HealthComponent->ApplyDamage(Damage);
-
-			}
-		}
+		return;
 	}
+
+	// Only process character skeletal-mesh hits.
+	if (!Cast<USkeletalMeshComponent>(
+		HitResult.GetComponent()
+	))
+	{
+		return;
+	}
+
+	UHealthComponent* HealthComponent =
+		HitActor->GetComponentByClass<UHealthComponent>();
+
+	if (!HealthComponent)
+	{
+		return;
+	}
+
+	// Do not apply damage or display numbers for corpses.
+	if (HealthComponent->IsDead())
+	{
+		return;
+	}
+
+	const bool bHeadShot = WasHeadShot(HitResult);
+
+	const float DamageToApply = bHeadShot
+		? Damage * HeadShotDamageMultiplier
+		: Damage;
+
+	if (bHeadShot)
+	{
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("[WeaponBase] Headshot")
+		);
+	}
+	else
+	{
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("[WeaponBase] Body shot")
+		);
+	}
+
+	// This finishes before execution continues.
+	HealthComponent->ApplyDamage(DamageToApply);
+
+	// The actor was confirmed alive before ApplyDamage. Therefore,
+	// if it is dead now, this specific hit killed it.
+	const bool bJustDied = HealthComponent->IsDead();
+
+	EDamageNumberType DamageNumberType;
+
+	if (bJustDied)
+	{
+		DamageNumberType = EDamageNumberType::Kill;
+	}
+	else if (bHeadShot)
+	{
+		DamageNumberType = EDamageNumberType::HeadShot;
+	}
+	else
+	{
+		DamageNumberType = EDamageNumberType::BodyShot;
+	}
+
+	// Damage still happens for every valid shooter. Only the UI
+	// request is restricted to the local player damaging an AI.
+	AFPSPlayerCharacter* PlayerShooter =
+		Cast<AFPSPlayerCharacter>(GetOwner());
+
+	ABaseAICharacter* AITarget =
+		Cast<ABaseAICharacter>(HitActor);
+
+	if (!PlayerShooter ||
+		!PlayerShooter->IsLocallyControlled() ||
+		!AITarget)
+	{
+		return;
+	}
+
+	AFPSPlayerController* PlayerController =
+		Cast<AFPSPlayerController>(
+			PlayerShooter->GetController()
+		);
+
+	if (!PlayerController)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT(
+				"[WeaponBase] Player shooter does not have "
+				"an AFPSPlayerController."
+			)
+		);
+
+		return;
+	}
+
+	const FVector DamageNumberLocation =
+		HitResult.ImpactPoint +
+		FVector::UpVector * 25.f;
+
+	PlayerController->ShowDamageNumber(
+		DamageToApply,
+		DamageNumberType,
+		DamageNumberLocation
+	);
 }
 
 	//=====================================================

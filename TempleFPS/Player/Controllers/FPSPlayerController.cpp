@@ -5,8 +5,7 @@
 #include "InputActionValue.h"
 #include "../Bralns/FPSBrainComponent.h"
 #include "../FiniteStateMachines/MovementStates/JumpState.h"
-
-
+#include "../../UI/Actors/DamageNumberActor.h"
 
 
 
@@ -365,4 +364,68 @@ void AFPSPlayerController::Input_EquipSecondary(const FInputActionValue& Value)
 	}
 
 	AFPSPlayerCharacterRef->EquipSecondaryWeapon();
+}
+
+void AFPSPlayerController::ShowDamageNumber(
+	float DamageAmount,
+	EDamageNumberType DamageNumberType,
+	const FVector& WorldLocation
+)
+{
+	// Only the local player's controller should create local UI.
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	if (!DamageNumberActorClass)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT(
+				"[FPSPlayerController] DamageNumberActorClass "
+				"is not assigned."
+			)
+		);
+
+		return;
+	}
+
+	if (!GetWorld())
+	{
+		return;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ADamageNumberActor* DamageNumberActor =
+		GetWorld()->SpawnActor<ADamageNumberActor>(
+			DamageNumberActorClass,
+			WorldLocation,
+			FRotator::ZeroRotator,
+			SpawnParameters
+		);
+
+	if (!DamageNumberActor)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT(
+				"[FPSPlayerController] Failed to spawn "
+				"DamageNumberActor."
+			)
+		);
+
+		return;
+	}
+
+	DamageNumberActor->ConfigureDamageNumber(
+		DamageAmount,
+		DamageNumberType
+	);
 }
