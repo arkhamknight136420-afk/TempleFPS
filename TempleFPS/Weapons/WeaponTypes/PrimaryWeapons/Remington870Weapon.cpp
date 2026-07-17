@@ -9,7 +9,7 @@
 #include "../../../Characters/BaseCharacter.h"
 #include "../../../ActorComponents/HealthComponent.h"
 #include "../../../UI/Enums/DamageNumberTypes.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
@@ -482,6 +482,9 @@ void ARemington870Weapon::ResolveBulletHitResults(
 			continue;
 		}
 
+
+		PlayHitSound(DamageNumberType);
+
 		const FVector AverageImpactPoint =
 			TargetDamage.ImpactPointTotal /
 			static_cast<float>(
@@ -634,6 +637,6 @@ int32 ARemington870Weapon::AddAmmo(int32 AdditionalAmmo)
 			AmmoInsertTimerHandle
 		);
 	}
-
+	UGameplayStatics::PlaySound2D(GetWorld(), AmmoAddedSound);
 	return ActualAmmoAdded;
 }

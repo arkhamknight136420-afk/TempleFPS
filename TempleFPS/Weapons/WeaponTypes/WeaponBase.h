@@ -319,6 +319,9 @@ protected:
 	UFUNCTION()
 	void PlayReloadEndSFX();
 
+	UFUNCTION()
+	void PlayHitSound(EDamageNumberType DamageNumberType);
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Audio")
 	USoundBase* FireSFX;
 
@@ -333,6 +336,18 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
 	USoundBase* ReloadFinishSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* BodyShotHitSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* HeadShotHitSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* KillShotHitSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* AmmoAddedSound;
 
 
 	//=====================================================

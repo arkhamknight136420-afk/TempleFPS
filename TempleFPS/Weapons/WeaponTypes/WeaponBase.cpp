@@ -363,6 +363,7 @@ int32 AWeaponBase::AddAmmo(int32 AdditionalAmmo)
 		MagazineSize
 	);
 
+	UGameplayStatics::PlaySound2D(GetWorld(), AmmoAddedSound);
 	return ActualAmmoAdded;
 }
 
@@ -587,6 +588,7 @@ void AWeaponBase::ResolveBulletHitResult(
 	// This finishes before execution continues.
 	HealthComponent->ApplyDamage(DamageToApply);
 
+	
 	// The actor was confirmed alive before ApplyDamage. Therefore,
 	// if it is dead now, this specific hit killed it.
 	const bool bJustDied = HealthComponent->IsDead();
@@ -640,6 +642,8 @@ void AWeaponBase::ResolveBulletHitResult(
 		return;
 	}
 
+	PlayHitSound(DamageNumberType);
+
 	const FVector DamageNumberLocation =
 		HitResult.ImpactPoint +
 		FVector::UpVector * 25.f;
@@ -679,6 +683,31 @@ void AWeaponBase::PlayReloadEndSFX()
 {
 
 }
+
+void AWeaponBase::PlayHitSound(EDamageNumberType DamageNumberType)
+{
+	USoundBase* HitSoundEffect = nullptr;
+	if (DamageNumberType == EDamageNumberType::HeadShot)
+	{
+		HitSoundEffect = HeadShotHitSound;
+	}
+	else if (DamageNumberType == EDamageNumberType::BodyShot)
+	{
+		HitSoundEffect = BodyShotHitSound;
+	}
+	else if (DamageNumberType == EDamageNumberType::Kill)
+	{
+		HitSoundEffect = KillShotHitSound;
+	}
+
+	if (!IsValid(HitSoundEffect))
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySound2D(GetWorld(), HitSoundEffect);
+}
+
 
 	//=====================================================
 	// VFX
