@@ -138,6 +138,7 @@ bool AWeaponBase::CanFire() const
 		return false;
 	}
 
+
 	return true;
 }
 

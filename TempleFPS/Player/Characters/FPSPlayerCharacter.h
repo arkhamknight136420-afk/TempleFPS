@@ -68,6 +68,8 @@ public:
 
 	UInventoryComponent* GetInventoryComponent() const;
 
+	UPROPERTY(BlueprintReadWrite)
+	bool IsInteracting = false;
 
 	UFUNCTION()
 	void OnInteractionCapsuleBeginOverlap(
@@ -163,7 +165,8 @@ protected:
 	 UPROPERTY(BlueprintReadOnly, Category = "Combat|Aiming")
 	 bool IsAiming = false;
 
-	 
+	 UFUNCTION(BlueprintCallable)
+	 void FinishInteraction();
 
 	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Stance")
 	 float StandingCapsuleHalfHeight = 88.0f;
@@ -171,7 +174,7 @@ protected:
 	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Stance")
 	 float CrouchedCapsuleHalfHeight = 60.0f;
 
-	
+	 FTimerHandle InteractionTimerHandle;
 
 
 	 void HandleADSInterpolation();

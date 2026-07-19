@@ -164,14 +164,25 @@ void AFPSPlayerCharacter::OnInteractionCapsuleEndOverlap(
 
 void AFPSPlayerCharacter::HandleInteract()
 {
-	if (CurrentInteractableActor)
+	if (IsInteracting || !IsValid(CurrentInteractableActor))
 	{
-		
-		IInteractionInterface::Execute_Interact(CurrentInteractableActor, this);
+		return;
 	}
 
-}
+	IsInteracting = true;
 
+	IInteractionInterface::Execute_Interact(
+		CurrentInteractableActor,
+		this
+	);
+
+	GetWorldTimerManager().SetTimer(
+		InteractionTimerHandle,
+		this,
+		&AFPSPlayerCharacter::FinishInteraction,
+		.3f
+	);
+}
 void AFPSPlayerCharacter::StartJumpMovement()
 {
 	Jump();
@@ -248,6 +259,10 @@ void AFPSPlayerCharacter::StartShooting()
 	if (!CurrentWeapon)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No current weapon equipped. Cannot shoot."));
+		return;
+	}
+	if (IsInteracting)
+	{
 		return;
 	}
 
@@ -405,3 +420,11 @@ void  AFPSPlayerCharacter::AttachWeaponToCharacter(AWeaponBase* WeaponToAttach)
 	);
 }
 
+void AFPSPlayerCharacter::FinishInteraction()
+{
+	GetWorldTimerManager().ClearTimer(InteractionTimerHandle);
+	IsInteracting = false;
+
+
+
+}
