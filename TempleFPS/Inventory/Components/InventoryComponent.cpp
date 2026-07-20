@@ -6,6 +6,7 @@
 
 #include "../../Player/Characters/FPSPlayerCharacter.h"
 #include "../../AI/Characters/BaseAICharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "GameFramework/Character.h"
 
@@ -84,6 +85,7 @@ void UInventoryComponent::PickUpWeapon(
 		return;
 
 	}
+	
 
 	ACharacter* CharacterOwner = Cast<ACharacter>(GetOwner());
 
@@ -199,6 +201,8 @@ void UInventoryComponent::EquipPrimaryWeapon()
 	}
 
 	CurrentHeldWeapon = PrimaryWeapon;
+
+	CurrentHeldWeapon->PlayPickupSFX();
 
 	CurrentHeldWeapon->SetOwner(CharacterOwner);
 	CurrentHeldWeapon->SetActorHiddenInGame(false);

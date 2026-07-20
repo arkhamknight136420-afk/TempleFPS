@@ -174,8 +174,13 @@ public:
 	virtual int32 AddAmmo(int32 AdditionalAmmo);
 
 
-	//ONAMMOCHANGEDDELAGATE
+	//=====================================================
+		// AUDIO
+		//=====================================================
 
+
+	UFUNCTION()
+	void PlayPickupSFX();
 
 protected:
 
@@ -322,6 +327,8 @@ protected:
 	UFUNCTION()
 	void PlayHitSound(EDamageNumberType DamageNumberType);
 
+	
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Audio")
 	USoundBase* FireSFX;
 
@@ -348,6 +355,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
 	USoundBase* AmmoAddedSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* PickUpSound;
 
 
 	//=====================================================

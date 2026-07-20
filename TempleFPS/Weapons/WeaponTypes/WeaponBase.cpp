@@ -780,5 +780,14 @@ void AWeaponBase::SpawnBulletTracerEffect(FVector MuzzlePosition, FVector Impact
 
 }
 
+void AWeaponBase::PlayPickupSFX()
+{
+
+	if (IsValid(PickUpSound))
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), PickUpSound);
+	}
+}
+
 	
 
