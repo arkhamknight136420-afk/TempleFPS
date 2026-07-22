@@ -20,4 +20,5 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "State")
 	bool bIsTriggerHeld = false;
+	//k
 };
