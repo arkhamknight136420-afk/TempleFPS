@@ -46,7 +46,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 
 
-void UHealthComponent::ApplyDamage(float InputDamageAmount)
+void UHealthComponent::ApplyDamage(ABaseCharacter* Attacker, float InputDamageAmount)
 {
 	if (bIsDead || InputDamageAmount <= 0.f)
 	{
@@ -75,7 +75,19 @@ void UHealthComponent::ApplyDamage(float InputDamageAmount)
 		HealthDelta
 	);
 
-	// Keep your AI reaction logic here.
+	ABaseAICharacter* AIOwner = Cast<ABaseAICharacter>(GetOwner());
+
+	if (IsValid(AIOwner))
+	{
+		ABaseAIController* AIController = Cast<ABaseAIController>(AIOwner->GetController());
+
+		if (IsValid(AIController))
+		{
+			AIController->SetCombatTargetBlackboardKey(Attacker);
+			AIController->SetCanSeeTargetBlackboardKey(true);
+		}
+	}
+
 
 	if (bJustDied)
 	{

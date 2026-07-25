@@ -7,6 +7,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h" 
 #include "../../Characters/BaseCharacter.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
 
 ABaseAIController::ABaseAIController()
 {
@@ -23,6 +25,8 @@ ABaseAIController::ABaseAIController()
 
 	bSetControlRotationFromPawnOrientation = false;
 
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
 
 
 
@@ -42,6 +46,28 @@ void ABaseAIController::BeginPlay()
 		);
 	}
 }
+
+void ABaseAIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (TickUpdateMoveLocation)
+	{
+		if (!IsValid(BlackboardComponent)) 
+		{
+			return;
+		}
+
+		UObject* CurrentTarget = BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"));
+
+		if (ABaseCharacter* LocalCurrentTarget = Cast<ABaseCharacter>(CurrentTarget))
+		{
+			SetMoveLocationBlackBoardKey(LocalCurrentTarget->GetActorLocation());
+		}
+	}
+
+}
+
 
 void ABaseAIController::OnPossess(APawn* InPawn)
 {
@@ -75,42 +101,72 @@ void ABaseAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Sti
 	}
 }
 
-void ABaseAIController::HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus)
+void ABaseAIController::HandleSightStimulus(
+	AActor* Actor,
+	FAIStimulus Stimulus)
 {
+	if (!IsValid(BlackboardComponent))
+	{
+		return;
+	}
+
+	ABaseCharacter* SeenCharacter = Cast<ABaseCharacter>(Actor);
+
+	if (!IsValid(SeenCharacter) || SeenCharacter == GetPawn())
+	{
+		return;
+	}
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		if (ABaseCharacter* SeenCharacter = Cast<ABaseCharacter>(Actor))
-		{
-			BlackboardComponent->SetValueAsObject(TEXT("Player"), SeenCharacter);
-		}
+		SetCombatTargetBlackboardKey(SeenCharacter);
+
+		SetCanSeeTargetBlackboardKey(true);
+
+		GetWorldTimerManager().ClearTimer(ReacquireTargetTimer);
+
+		TickUpdateMoveLocation = false;
+
+
+		return;
 	}
-	else
+
+	UObject* CurrentTarget =
+		BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"));
+
+	SetCanSeeTargetBlackboardKey(false);
+	
+	TickUpdateMoveLocation = true;
+
+	StartReacquireTargetTimer();
+	
+
+}
+
+void ABaseAIController::SetCombatTargetBlackboardKey(ABaseCharacter* TargetCharacter)
+{
+	
+	if (IsValid(TargetCharacter))
 	{
-		BlackboardComponent->ClearValue(TEXT("Player"));	
-	}	
-}
-
-void ABaseAIController::FocusOnTarget(AActor* TargetActor)
-{
-
-	SetFocus(TargetActor, EAIFocusPriority::Gameplay);
-}
-
-void ABaseAIController::UnfocusOnTarget()
-{
-	ClearFocus(EAIFocusPriority::Gameplay);
-}
-
-void ABaseAIController::SetPlayerBlackBoardKey()
-{
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-
-	if (PlayerPawn)
-	{
-		BlackboardComponent->SetValueAsObject(TEXT("Player"), PlayerPawn);
+		BlackboardComponent->SetValueAsObject(TEXT("CombatTarget"), TargetCharacter);
 	}
 }
+
+void ABaseAIController::ClearCombatTargetBlackboardKey()
+{
+		BlackboardComponent->ClearValue(TEXT("CombatTarget"));
+}
+
+void ABaseAIController::SetCanSeeTargetBlackboardKey(bool IsVisible)
+{
+	BlackboardComponent->SetValueAsBool(TEXT("CanSeeTarget"), IsVisible);
+}
+
+void ABaseAIController::SetMoveLocationBlackBoardKey(FVector DesiredLocation)
+{
+	BlackboardComponent->SetValueAsVector(TEXT("MoveLocation"), DesiredLocation);
+}
+
 
 void ABaseAIController::YawFocusOnTarget(AActor* Target, float DeltaTime)
 {
@@ -129,6 +185,17 @@ void ABaseAIController::YawFocusOnTarget(AActor* Target, float DeltaTime)
 	SetControlRotation(UpdatedRotation);
 
 
+}
+
+void ABaseAIController::StartReacquireTargetTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		ReacquireTargetTimer,
+		this,
+		&ABaseAIController::ClearCombatTargetBlackboardKey,
+		5.0f,
+		false
+	);
 }
 
 

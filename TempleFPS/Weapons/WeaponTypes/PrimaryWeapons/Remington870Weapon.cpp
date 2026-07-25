@@ -438,10 +438,16 @@ void ARemington870Weapon::ResolveBulletHitResults(
 			continue;
 		}
 
+		ABaseCharacter* Attacker = Cast<ABaseCharacter>(GetOwner());
+
+		if (IsValid(Attacker))
+		{
+			TargetDamage.HealthComponent->ApplyDamage(Attacker,
+				TargetDamage.TotalDamage
+			);
+		}
 		// Damage is applied once using the combined pellet total.
-		TargetDamage.HealthComponent->ApplyDamage(
-			TargetDamage.TotalDamage
-		);
+		
 
 		// The target was confirmed alive immediately before applying
 		// the accumulated damage.

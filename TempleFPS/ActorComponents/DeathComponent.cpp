@@ -14,7 +14,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
-
+#include "../AI/Controllers/BaseAIController.h"
 #include "../Characters/BaseCharacter.h"
 #include "../AI/Characters/BaseAICharacter.h"
 #include "../Core/GameModes/FPSGameMode.h"
@@ -206,10 +206,12 @@ void UDeathComponent::HandleAIControllerDeath(
 
 	AICharacter->StopShooting();
 
-	if (UBlackboardComponent* Blackboard =
-		AIController->GetBlackboardComponent())
+	if (ABaseAIController* BaseAIController = Cast<ABaseAIController>(AIController))
 	{
-		Blackboard->ClearValue(TEXT("Player"));
+		if (ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(AICharacter))
+		{
+			BaseAIController->ClearCombatTargetBlackboardKey();
+		}
 	}
 
 	if (UBrainComponent* Brain =

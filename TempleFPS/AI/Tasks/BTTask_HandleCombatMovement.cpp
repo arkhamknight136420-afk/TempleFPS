@@ -113,7 +113,7 @@ ACharacter* UBTTask_HandleCombatMovement::GetCurrentPlayer(
 	}
 
 	UObject* CurrentPlayerKey =
-		BlackboardComponent->GetValueAsObject(TEXT("Player"));
+		BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"));
 
 	return Cast<ACharacter>(CurrentPlayerKey);
 }

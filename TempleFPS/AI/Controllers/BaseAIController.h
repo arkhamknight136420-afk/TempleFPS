@@ -9,6 +9,7 @@ class UAISenseConfig_Sight;
 class UBehaviorTree;
 class UBlackboardComponent;
 class UBehaviorTreeComponent;
+class ABaseCharacter;
 
 UCLASS()
 class TEMPLEFPS_API ABaseAIController : public AAIController
@@ -18,15 +19,25 @@ class TEMPLEFPS_API ABaseAIController : public AAIController
 public:
 	ABaseAIController();
 
-
-	UFUNCTION()
-	void FocusOnTarget(AActor* TargetActor);
-
-	UFUNCTION()
-	void UnfocusOnTarget();
+	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
+	void SetCombatTargetBlackboardKey(ABaseCharacter* TargetCharacter);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
-	void SetPlayerBlackBoardKey();
+	void ClearCombatTargetBlackboardKey();
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
+	void SetCanSeeTargetBlackboardKey(bool IsVisible);
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
+	void SetMoveLocationBlackBoardKey(FVector DesiredLocation);
+
+	void StartReacquireTargetTimer();
+
+	
+
+	virtual void Tick(float DeltaTime) override;
+
+	
 
 	UFUNCTION(BlueprintCallable, Category = "Rotation")
 	void YawFocusOnTarget(AActor* Target, float DeltaTime);
@@ -49,7 +60,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
 	UAISenseConfig_Sight* SightConfig = nullptr;
 
+	FTimerHandle ReacquireTargetTimer;
 
+	bool TickUpdateMoveLocation = false;
 
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);

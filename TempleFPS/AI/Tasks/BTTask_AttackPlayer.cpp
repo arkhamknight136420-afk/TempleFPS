@@ -19,9 +19,12 @@ EBTNodeResult::Type UBTTask_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Ow
 {
 	ABaseAIController* AIController = GetBaseAIController(OwnerComp);
 
-	ACharacter* CurrentTarget = GetCurrentPlayer(OwnerComp);
+	ACharacter* CurrentTarget = GetCombatTarget(OwnerComp);
 
-	if (!IsValid(AIController) || !IsValid(CurrentTarget))
+	bool IsVisible = GetCanSeeTarget(OwnerComp);
+
+
+	if (!IsValid(AIController) || !IsValid(CurrentTarget) || !IsVisible)
 	{
 		return EBTNodeResult::Failed;
 	}
@@ -33,10 +36,11 @@ void UBTTask_AttackPlayer::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 {
 	ABaseAIController* AIController = GetBaseAIController(OwnerComp);
 	ABaseAICharacter* AICharacter = GetAICharacter(OwnerComp);
-	ACharacter* CurrentTarget = GetCurrentPlayer(OwnerComp);
+	ACharacter* CurrentTarget = GetCombatTarget(OwnerComp);
 	UHealthComponent* CurrentTargetHealthComponent = GetCurrentTargetHealthComponent(CurrentTarget);
+	bool IsVisible = GetCanSeeTarget(OwnerComp);
 
-	if (!IsValid(AIController) || !IsValid(AICharacter) || !IsValid(CurrentTarget) || !IsValid(CurrentTargetHealthComponent) || CurrentTargetHealthComponent->IsDead())
+	if (!IsValid(AIController) || !IsValid(AICharacter) || !IsValid(CurrentTarget) || !IsValid(CurrentTargetHealthComponent) || CurrentTargetHealthComponent->IsDead() || !IsVisible)
 	{
 		if (IsValid(AICharacter))
 		{
@@ -50,11 +54,11 @@ void UBTTask_AttackPlayer::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
 	AICharacter->SetAimTarget(CurrentTarget);
 
-	UpdateAimAtPlayer(AIController, AICharacter, CurrentTarget, DeltaSeconds);
+	UpdateAimAtTarget(AIController, AICharacter, CurrentTarget, DeltaSeconds);
 	UpdateShootingState(AICharacter, CurrentTarget);
 }
 
-ACharacter* UBTTask_AttackPlayer::GetCurrentPlayer(UBehaviorTreeComponent& OwnerComp) const
+ACharacter* UBTTask_AttackPlayer::GetCombatTarget(UBehaviorTreeComponent& OwnerComp) const
 {
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 
@@ -63,10 +67,24 @@ ACharacter* UBTTask_AttackPlayer::GetCurrentPlayer(UBehaviorTreeComponent& Owner
 		return nullptr;
 	}
 
-	UObject* CurrentPlayerKey = BlackboardComponent->GetValueAsObject(TEXT("Player"));
+	UObject* CurrentPlayerKey = BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"));
 
 	return Cast<ACharacter>(CurrentPlayerKey);
 }
+
+bool UBTTask_AttackPlayer::GetCanSeeTarget(UBehaviorTreeComponent& OwnerComp) const
+{
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+
+	if (!BlackboardComponent)
+	{
+		return false;
+	}
+	return BlackboardComponent->GetValueAsBool(TEXT("CanSeeTarget"));
+
+
+}
+
 
 ABaseAIController* UBTTask_AttackPlayer::GetBaseAIController(UBehaviorTreeComponent& OwnerComp) const
 {
@@ -95,7 +113,7 @@ UHealthComponent* UBTTask_AttackPlayer::GetCurrentTargetHealthComponent(ACharact
 	return CurrentTarget->FindComponentByClass<UHealthComponent>();
 }
 
-float UBTTask_AttackPlayer::GetYawDeltaToPlayer(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const
+float UBTTask_AttackPlayer::GetYawDeltaToTarget(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const
 {
 	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(AICharacter->GetActorLocation(), CurrentTarget->GetActorLocation());
 
@@ -106,12 +124,12 @@ float UBTTask_AttackPlayer::GetYawDeltaToPlayer(ABaseAICharacter* AICharacter, A
 	return FMath::Abs(DeltaRot.Yaw);
 }
 
-bool UBTTask_AttackPlayer::IsFacingPlayer(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const
+bool UBTTask_AttackPlayer::IsFacingTarget(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const
 {
-	return GetYawDeltaToPlayer(AICharacter, CurrentTarget) <= LookAtYawTolerance;
+	return GetYawDeltaToTarget(AICharacter, CurrentTarget) <= LookAtYawTolerance;
 }
 
-void UBTTask_AttackPlayer::UpdateAimAtPlayer(ABaseAIController* AIController, ABaseAICharacter* AICharacter, ACharacter* CurrentTarget, float DeltaSeconds)
+void UBTTask_AttackPlayer::UpdateAimAtTarget(ABaseAIController* AIController, ABaseAICharacter* AICharacter, ACharacter* CurrentTarget, float DeltaSeconds)
 {
 	AICharacter->UpdateEyePitch(CurrentTarget);
 	AIController->YawFocusOnTarget(CurrentTarget, DeltaSeconds);
@@ -119,7 +137,7 @@ void UBTTask_AttackPlayer::UpdateAimAtPlayer(ABaseAIController* AIController, AB
 
 void UBTTask_AttackPlayer::UpdateShootingState(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget)
 {
-	if (IsFacingPlayer(AICharacter, CurrentTarget))
+	if (IsFacingTarget(AICharacter, CurrentTarget))
 	{ 
 		AICharacter->StartShooting();
 	}

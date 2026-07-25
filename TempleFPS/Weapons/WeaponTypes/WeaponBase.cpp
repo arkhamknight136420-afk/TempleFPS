@@ -586,8 +586,14 @@ void AWeaponBase::ResolveBulletHitResult(
 		);
 	}
 
+	ABaseCharacter* Attacker = Cast<ABaseCharacter>(GetOwner());
+
+	if (IsValid(Attacker))
+	{
+		// set are target to the actor that attacked us
+	}
 	// This finishes before execution continues.
-	HealthComponent->ApplyDamage(DamageToApply);
+	HealthComponent->ApplyDamage(Attacker,DamageToApply);
 
 	
 	// The actor was confirmed alive before ApplyDamage. Therefore,

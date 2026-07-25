@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
+class ABaseCharacter;
 class UDeathComponent;
 class ABaseAICharacter;
 class ABaseAIController;
@@ -37,7 +38,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
-	void ApplyDamage(float InputDamageAmount);
+	void ApplyDamage(ABaseCharacter* Attacker, float InputDamageAmount);
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void AddHealth(float InputHealthAmount);

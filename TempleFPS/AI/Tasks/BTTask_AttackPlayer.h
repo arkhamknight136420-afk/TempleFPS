@@ -24,7 +24,9 @@ protected:
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 private:
-	ACharacter* GetCurrentPlayer(UBehaviorTreeComponent& OwnerComp) const;
+	ACharacter* GetCombatTarget(UBehaviorTreeComponent& OwnerComp) const;
+
+	bool GetCanSeeTarget(UBehaviorTreeComponent& OwnerComp) const;
 
 	ABaseAIController* GetBaseAIController(UBehaviorTreeComponent& OwnerComp) const;
 
@@ -33,11 +35,11 @@ private:
 	UHealthComponent* GetCurrentTargetHealthComponent(ACharacter* CurrentTarget) const;
 
 
-	float GetYawDeltaToPlayer(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const;
+	float GetYawDeltaToTarget(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const;
 
-	bool IsFacingPlayer(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const;
+	bool IsFacingTarget(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const;
 
-	void UpdateAimAtPlayer(ABaseAIController* AIController, ABaseAICharacter* AICharacter, ACharacter* CurrentTarget, float DeltaSeconds);
+	void UpdateAimAtTarget(ABaseAIController* AIController, ABaseAICharacter* AICharacter, ACharacter* CurrentTarget, float DeltaSeconds);
 
 	void UpdateShootingState(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget);
 
