@@ -110,63 +110,118 @@ void ABaseAIController::HandleSightStimulus(
 		return;
 	}
 
-	ABaseCharacter* SeenCharacter = Cast<ABaseCharacter>(Actor);
+	ABaseCharacter* UpdatedCharacter = Cast<ABaseCharacter>(Actor);
 
-	if (!IsValid(SeenCharacter) || SeenCharacter == GetPawn())
+	if (!IsValid(UpdatedCharacter) ||
+		UpdatedCharacter == GetPawn())
 	{
 		return;
 	}
+
+	ABaseCharacter* CurrentTarget = Cast<ABaseCharacter>(
+		BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"))
+	);
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		SetCombatTargetBlackboardKey(SeenCharacter);
-
+		// SetCombatTargetBlackboardKey cancels the timer and
+		// stops the five-second pursuit tracking.
+		SetCombatTargetBlackboardKey(UpdatedCharacter);
 		SetCanSeeTargetBlackboardKey(true);
-
-		GetWorldTimerManager().ClearTimer(ReacquireTargetTimer);
-
-		TickUpdateMoveLocation = false;
-
 
 		return;
 	}
 
-	UObject* CurrentTarget =
-		BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"));
+	// Do not let an unrelated character's sight-loss event
+	// affect our current combat target.
+	if (UpdatedCharacter != CurrentTarget)
+	{
+		return;
+	}
 
 	SetCanSeeTargetBlackboardKey(false);
-	
+
+	// Immediately establish the pursuit destination.
+	SetMoveLocationBlackBoardKey(
+		UpdatedCharacter->GetActorLocation()
+	);
+
+	// Continue updating the target's live location for five seconds.
 	TickUpdateMoveLocation = true;
 
 	StartReacquireTargetTimer();
-	
-
 }
 
-void ABaseAIController::SetCombatTargetBlackboardKey(ABaseCharacter* TargetCharacter)
+void ABaseAIController::SetCombatTargetBlackboardKey(
+	ABaseCharacter* TargetCharacter)
 {
-	
-	if (IsValid(TargetCharacter))
+	if (!IsValid(BlackboardComponent) ||
+		!IsValid(TargetCharacter))
 	{
-		BlackboardComponent->SetValueAsObject(TEXT("CombatTarget"), TargetCharacter);
+		return;
 	}
+
+	GetWorldTimerManager().ClearTimer(ReacquireTargetTimer);
+
+	// The target is currently visible or has been replaced,
+	// so stop the previous lost-target tracking.
+	TickUpdateMoveLocation = false;
+
+	BlackboardComponent->SetValueAsObject(
+		TEXT("CombatTarget"),
+		TargetCharacter
+	);
 }
 
 void ABaseAIController::ClearCombatTargetBlackboardKey()
 {
-		BlackboardComponent->ClearValue(TEXT("CombatTarget"));
+	TickUpdateMoveLocation = false;
+
+	GetWorldTimerManager().ClearTimer(ReacquireTargetTimer);
+
+	if (!IsValid(BlackboardComponent))
+	{
+		return;
+	}
+
+	StopMovement();
+
+	BlackboardComponent->SetValueAsBool(
+		TEXT("CanSeeTarget"),
+		false
+	);
+
+	BlackboardComponent->ClearValue(
+		TEXT("MoveLocation")
+	);
+
+	BlackboardComponent->ClearValue(
+		TEXT("CombatTarget")
+	);
 }
 
 void ABaseAIController::SetCanSeeTargetBlackboardKey(bool IsVisible)
 {
-	BlackboardComponent->SetValueAsBool(TEXT("CanSeeTarget"), IsVisible);
+	if (IsValid(BlackboardComponent))
+	{
+		BlackboardComponent->SetValueAsBool(
+			TEXT("CanSeeTarget"),
+			IsVisible
+		);
+	}
 }
 
-void ABaseAIController::SetMoveLocationBlackBoardKey(FVector DesiredLocation)
+void ABaseAIController::SetMoveLocationBlackBoardKey(
+	FVector DesiredLocation)
 {
-	BlackboardComponent->SetValueAsVector(TEXT("MoveLocation"), DesiredLocation);
+	if (IsValid(BlackboardComponent))
+	{
+		BlackboardComponent->SetValueAsVector(
+			TEXT("MoveLocation"),
+			DesiredLocation
+		);
+	}
 }
-
 
 void ABaseAIController::YawFocusOnTarget(AActor* Target, float DeltaTime)
 {
