@@ -75,6 +75,7 @@ void UInventoryComponent::PickUpWeapon(
 		return;
 	}
 
+
 	if (IsValid(CurrentHeldWeapon) &&
 		WeaponClass == CurrentHeldWeapon->GetClass())
 	{
@@ -201,7 +202,7 @@ void UInventoryComponent::EquipPrimaryWeapon()
 	}
 
 	CurrentHeldWeapon = PrimaryWeapon;
-
+	CurrentHeldWeapon->ClearWeaponDestructionTimer();
 	CurrentHeldWeapon->PlayPickupSFX();
 
 	CurrentHeldWeapon->SetOwner(CharacterOwner);

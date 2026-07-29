@@ -72,7 +72,7 @@ void UHealthComponent::ApplyDamage(ABaseCharacter* Attacker, float InputDamageAm
 	OnHealthChanged.Broadcast(
 		CurrentHealth,
 		MaxHealth,
-		HealthDelta
+		Attacker
 	);
 
 	ABaseAICharacter* AIOwner = Cast<ABaseAICharacter>(GetOwner());
@@ -122,14 +122,4 @@ void UHealthComponent::AddHealth(float InputHealthAmount)
 		MaxHealth
 	);
 
-	const float HealthDelta = CurrentHealth - PreviousHealth;
-
-	if (!FMath::IsNearlyZero(HealthDelta))
-	{
-		OnHealthChanged.Broadcast(
-			CurrentHealth,
-			MaxHealth,
-			HealthDelta
-		);
-	}
 }

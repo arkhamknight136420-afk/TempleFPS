@@ -15,7 +15,6 @@
 #include "../../AI/Characters/BaseAICharacter.h"
 #include "../../UI/Enums/DamageNumberTypes.h"
 
-
 	//=====================================================
 	// LIFECYCLE
 	//=====================================================
@@ -56,6 +55,16 @@ void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+void AWeaponBase::StartWeaponDestructionTimer()
+{
+	SetLifeSpan(20.f);
+}
+void AWeaponBase::ClearWeaponDestructionTimer()
+{
+	SetLifeSpan(0.f);
+}
+
 
 	//=====================================================
 	// INTERACTION
@@ -668,6 +677,13 @@ void AWeaponBase::ResolveBulletHitResult(
 
 void AWeaponBase::PlayFireSFX()
 {
+	if (AFPSPlayerCharacter* PlayerOwner = Cast<AFPSPlayerCharacter>(GetOwner()))
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), FireSFX);
+		
+		return;
+	}
+
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSFX, MuzzleLocation->GetComponentLocation(), 1.0f);
 }
 

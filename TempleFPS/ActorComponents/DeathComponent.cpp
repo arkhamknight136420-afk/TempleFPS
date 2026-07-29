@@ -66,6 +66,10 @@ void UDeathComponent::HandleDeath()
 	const float CorpseLifetime =
 		NotifyGameModeOfDeath(Character);
 
+	if (AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(Character))
+	{
+		PlayerCharacter->StopShooting();
+	}
 	/*
 	 * Disable or destroy the current controller behavior.
 	 */
@@ -153,6 +157,7 @@ void UDeathComponent::HandleControllerDeath(
 		 * Disabling only the pawn is not enough when input actions are
 		 * processed through the PlayerController.
 		 */
+		
 		Character->DisableInput(PlayerController);
 		PlayerController->DisableInput(PlayerController);
 

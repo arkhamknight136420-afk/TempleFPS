@@ -219,4 +219,6 @@ void ABaseAICharacter::DropCurrentHeldWeapon()
 	HeldWeaponComponent->DestroyChildActor();
 	CurrentHeldWeapon = nullptr;
 
+	DroppedWeapon->StartWeaponDestructionTimer();
+
 }

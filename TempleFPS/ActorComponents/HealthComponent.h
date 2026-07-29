@@ -15,7 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
 	FOnHealthChangedSignature,
 	float, CurrentHealth,
 	float, MaxHealth,
-	float, HealthDelta
+	ABaseCharacter*, Attacker
 );
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

@@ -38,6 +38,10 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	void StartWeaponDestructionTimer();
+
+	void ClearWeaponDestructionTimer();
+
 
 	//=====================================================
 	// INTERACTION
@@ -189,6 +193,7 @@ protected:
 	//=====================================================
 
 	virtual void BeginPlay() override;
+
 
 
 	//=====================================================
