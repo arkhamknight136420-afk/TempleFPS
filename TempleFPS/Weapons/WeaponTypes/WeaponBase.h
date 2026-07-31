@@ -164,11 +164,7 @@ public:
 		return AddedReserveAmmo;
 	}
 
-	UFUNCTION(BlueprintPure, Category = "Weapon | UI")
-	UTexture2D* GetWeaponIcon() const
-	{
-		return WeaponIcon.Get();
-	}
+	
 
 	
 
@@ -179,12 +175,26 @@ public:
 
 
 	//=====================================================
-		// AUDIO
-		//=====================================================
+	// AUDIO
+	//=====================================================
 
 
 	UFUNCTION()
 	void PlayPickupSFX();
+
+	//=====================================================
+	// UI
+	//=====================================================
+
+	UFUNCTION(BlueprintPure, Category = "Weapon | UI")
+	UTexture2D* GetWeaponIcon() const
+	{
+		return WeaponIcon.Get();
+	}
+
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Weapon | UI")
+	UTexture2D* CrossHair;
 
 protected:
 

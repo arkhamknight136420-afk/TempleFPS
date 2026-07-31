@@ -68,6 +68,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
 	float ADSVerticalSensitivityMultiplier = .25f;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
+	float ADSSniperHorizontalSensitivityMultiplier = .1f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
+	float ADSSniperVerticalSensitivityMultiplier = .1f;
+
 
 
 	// Movement

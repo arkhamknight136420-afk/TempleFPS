@@ -6,6 +6,9 @@
 #include "../Bralns/FPSBrainComponent.h"
 #include "../FiniteStateMachines/MovementStates/JumpState.h"
 #include "../../UI/Actors/DamageNumberActor.h"
+#include "../../Inventory/Components/InventoryComponent.h"
+#include "../../Weapons/WeaponTypes/PrimaryWeapons/BarrettM82Weapon.h"
+
 
 
 
@@ -152,12 +155,33 @@ void AFPSPlayerController::Input_Move(const FInputActionValue& Value)
 void AFPSPlayerController::Input_Look(const FInputActionValue& Value)
 {
 	const FVector2D LookInput = Value.Get<FVector2D>();
+	UInventoryComponent* Inventory = AFPSPlayerCharacterRef->GetInventoryComponent();
+
+	AWeaponBase* CurrentWeapon = Inventory->GetCurrentHeldWeapon();
+
+	float InputADSHorizontalSensitivityMultiplier;
+	float InputADSVerticalSensitivityMultiplier;
+
+	if (Cast<ABarrettM82Weapon>(CurrentWeapon))
+	{
+		InputADSHorizontalSensitivityMultiplier = ADSSniperHorizontalSensitivityMultiplier;
+
+		InputADSVerticalSensitivityMultiplier = ADSSniperVerticalSensitivityMultiplier;
+	}
+	else
+	{
+		InputADSHorizontalSensitivityMultiplier = ADSHorizontalSensitivityMultiplier;
+
+		InputADSVerticalSensitivityMultiplier = ADSVerticalSensitivityMultiplier;
+	}
+
+
 
 	if (IsInputingAim)
 	{
 
-		AddYawInput(LookInput.X * ADSHorizontalSensitivityMultiplier);
-		AddPitchInput(-LookInput.Y * ADSVerticalSensitivityMultiplier);
+		AddYawInput(LookInput.X * InputADSHorizontalSensitivityMultiplier);
+		AddPitchInput(-LookInput.Y * InputADSVerticalSensitivityMultiplier);
 	}
 	else
 	{

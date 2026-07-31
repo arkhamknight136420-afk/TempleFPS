@@ -10,6 +10,7 @@
 #include "../../ActorComponents/DeathComponent.h"
 #include "../../ActorComponents/UCharacterAudioComponent.h"
 #include "../../Characters/BaseCharacter.h"
+#include "../../Weapons/WeaponTypes/PrimaryWeapons/BarrettM82Weapon.h"
 
 
 
@@ -326,9 +327,22 @@ void AFPSPlayerCharacter::HandleADSInterpolation()
 {
 	if (IsAiming)
 	{
-		
+		float InputADSFOV;
 
-		if (PlayerCamera->FieldOfView == ADSFieldOfView)
+		UInventoryComponent* Inventory = GetInventoryComponent();
+
+		AWeaponBase* CurrentWeapon = Inventory->GetCurrentHeldWeapon();
+
+		if (Cast<ABarrettM82Weapon>(CurrentWeapon))
+		{
+			InputADSFOV = SniperADSFieldOfView;
+		}
+		else
+		{
+			InputADSFOV = ADSFieldOfView;
+		}
+
+		if (PlayerCamera->FieldOfView == InputADSFOV)
 		{
 
 			IsInterpolatingAim = false;
@@ -338,7 +352,7 @@ void AFPSPlayerCharacter::HandleADSInterpolation()
 		}
 		else
 		{
-			PlayerCamera->FieldOfView = FMath::FInterpConstantTo(PlayerCamera->FieldOfView, ADSFieldOfView, GetWorld()->GetDeltaSeconds(), AimInterpSpeed);
+			PlayerCamera->FieldOfView = FMath::FInterpConstantTo(PlayerCamera->FieldOfView, InputADSFOV, GetWorld()->GetDeltaSeconds(), AimInterpSpeed);
 			
 		}
 	}

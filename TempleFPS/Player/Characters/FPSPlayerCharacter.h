@@ -155,6 +155,9 @@ protected:
 	 float ADSFieldOfView = 60.f;
 
 	 UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Combat|Aiming")
+	 float SniperADSFieldOfView = 15.f;
+
+	 UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Combat|Aiming")
 	 float AimInterpSpeed = 300.f;
 
 	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
