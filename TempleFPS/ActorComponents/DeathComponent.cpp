@@ -19,6 +19,8 @@
 #include "../AI/Characters/BaseAICharacter.h"
 #include "../Core/GameModes/FPSGameMode.h"
 #include "../Player/Characters/FPSPlayerCharacter.h"
+#include "../Inventory/Components/InventoryComponent.h"
+#include "../Weapons/WeaponTypes/WeaponBase.h"
 
 UDeathComponent::UDeathComponent()
 {
@@ -78,7 +80,7 @@ void UDeathComponent::HandleDeath()
 	/*
 	 * Drop the weapon before the corpse actor is eventually destroyed.
 	 */
-	DropCharacterWeapon(Character);
+	HandleCharacterWeapon(Character);
 
 	/*
 	 * Convert the character into a physics ragdoll.
@@ -314,7 +316,7 @@ void UDeathComponent::EnableRagdoll(
 	);
 }
 
-void UDeathComponent::DropCharacterWeapon(
+void UDeathComponent::HandleCharacterWeapon(
 	ACharacter* Character
 )
 {
@@ -322,6 +324,13 @@ void UDeathComponent::DropCharacterWeapon(
 		Cast<ABaseAICharacter>(Character))
 	{
 		AICharacter->DropCurrentHeldWeapon();
+	}
+	else if (AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(Character))
+	{
+		if (UInventoryComponent* PlayerInventory = PlayerCharacter->GetInventoryComponent())
+		{
+			PlayerInventory->GetCurrentHeldWeapon()->SetLifeSpan(8.f);
+		}
 	}
 }
 

@@ -184,6 +184,7 @@ void AFPSPlayerCharacter::HandleInteract()
 		.3f
 	);
 }
+
 void AFPSPlayerCharacter::StartJumpMovement()
 {
 	Jump();

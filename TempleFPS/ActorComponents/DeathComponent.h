@@ -74,7 +74,7 @@ private:
 		ACharacter* Character
 	);
 
-	void DropCharacterWeapon(
+	void HandleCharacterWeapon(
 		ACharacter* Character
 	);
 
