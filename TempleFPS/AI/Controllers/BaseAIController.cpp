@@ -9,6 +9,8 @@
 #include "../../Characters/BaseCharacter.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "Perception/AISense_Sight.h"
+#include "../../ActorComponents/HealthComponent.h"
 
 ABaseAIController::ABaseAIController()
 {
@@ -103,14 +105,16 @@ void ABaseAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Sti
 
 void ABaseAIController::HandleSightStimulus(
 	AActor* Actor,
-	FAIStimulus Stimulus)
+	FAIStimulus Stimulus
+)
 {
 	if (!IsValid(BlackboardComponent))
 	{
 		return;
 	}
 
-	ABaseCharacter* UpdatedCharacter = Cast<ABaseCharacter>(Actor);
+	ABaseCharacter* UpdatedCharacter =
+		Cast<ABaseCharacter>(Actor);
 
 	if (!IsValid(UpdatedCharacter) ||
 		UpdatedCharacter == GetPawn())
@@ -118,22 +122,77 @@ void ABaseAIController::HandleSightStimulus(
 		return;
 	}
 
-	ABaseCharacter* CurrentTarget = Cast<ABaseCharacter>(
-		BlackboardComponent->GetValueAsObject(TEXT("CombatTarget"))
-	);
+	ABaseCharacter* CurrentTarget =
+		Cast<ABaseCharacter>(
+			BlackboardComponent->GetValueAsObject(
+				TEXT("CombatTarget")
+			)
+		);
 
-	if (Stimulus.WasSuccessfullySensed())
+	// Never acquire or continue targeting a corpse.
+	if (!IsLivingCombatTarget(UpdatedCharacter))
 	{
-		// SetCombatTargetBlackboardKey cancels the timer and
-		// stops the five-second pursuit tracking.
-		SetCombatTargetBlackboardKey(UpdatedCharacter);
-		SetCanSeeTargetBlackboardKey(true);
+		if (IsValid(AIPerception))
+		{
+			AIPerception->ForgetActor(
+				UpdatedCharacter
+			);
+		}
+
+		if (UpdatedCharacter == CurrentTarget)
+		{
+			ClearCombatTargetBlackboardKey();
+			TrySelectVisibleLivingTarget();
+		}
 
 		return;
 	}
 
-	// Do not let an unrelated character's sight-loss event
-	// affect our current combat target.
+	if (Stimulus.WasSuccessfullySensed())
+	{
+		// Our hidden current target has become visible again.
+		if (UpdatedCharacter == CurrentTarget)
+		{
+			SetCombatTargetBlackboardKey(
+				UpdatedCharacter
+			);
+
+			SetCanSeeTargetBlackboardKey(true);
+
+			BlackboardComponent->ClearValue(
+				TEXT("MoveLocation")
+			);
+
+			return;
+		}
+
+		// Remain committed to a living, visible current target.
+		if (IsTargetCurrentlyVisible(CurrentTarget))
+		{
+			return;
+		}
+
+		// There is no visible current target. Select the closest
+		// currently visible living character.
+		if (!TrySelectVisibleLivingTarget())
+		{
+			// Defensive fallback in case perception has not yet
+			// added UpdatedCharacter to its visible actor array.
+			SetCombatTargetBlackboardKey(
+				UpdatedCharacter
+			);
+
+			SetCanSeeTargetBlackboardKey(true);
+
+			BlackboardComponent->ClearValue(
+				TEXT("MoveLocation")
+			);
+		}
+
+		return;
+	}
+
+	// Losing sight of a non-target does not affect combat.
 	if (UpdatedCharacter != CurrentTarget)
 	{
 		return;
@@ -141,30 +200,51 @@ void ABaseAIController::HandleSightStimulus(
 
 	SetCanSeeTargetBlackboardKey(false);
 
-	// Immediately establish the pursuit destination.
+	// Prefer another visible opponent over pursuing a hidden one.
+	if (TrySelectVisibleLivingTarget(UpdatedCharacter))
+	{
+		return;
+	}
+
+	// No visible alternatives exist, so pursue the hidden
+	// target using your five-second live-location behavior.
 	SetMoveLocationBlackBoardKey(
 		UpdatedCharacter->GetActorLocation()
 	);
 
-	// Continue updating the target's live location for five seconds.
 	TickUpdateMoveLocation = true;
 
 	StartReacquireTargetTimer();
 }
 
 void ABaseAIController::SetCombatTargetBlackboardKey(
-	ABaseCharacter* TargetCharacter)
+	ABaseCharacter* TargetCharacter
+)
 {
 	if (!IsValid(BlackboardComponent) ||
-		!IsValid(TargetCharacter))
+		!IsLivingCombatTarget(TargetCharacter))
 	{
 		return;
 	}
 
-	GetWorldTimerManager().ClearTimer(ReacquireTargetTimer);
+	ABaseCharacter* PreviousTarget = Cast<ABaseCharacter>(
+		BlackboardComponent->GetValueAsObject(
+			TEXT("CombatTarget")
+		)
+	);
 
-	// The target is currently visible or has been replaced,
-	// so stop the previous lost-target tracking.
+	if (PreviousTarget != TargetCharacter)
+	{
+		UnbindFromCombatTargetHealth(PreviousTarget);
+	}
+
+	// AddUniqueDynamic prevents duplicate bindings.
+	BindToCombatTargetHealth(TargetCharacter);
+
+	GetWorldTimerManager().ClearTimer(
+		ReacquireTargetTimer
+	);
+
 	TickUpdateMoveLocation = false;
 
 	BlackboardComponent->SetValueAsObject(
@@ -177,12 +257,22 @@ void ABaseAIController::ClearCombatTargetBlackboardKey()
 {
 	TickUpdateMoveLocation = false;
 
-	GetWorldTimerManager().ClearTimer(ReacquireTargetTimer);
+	GetWorldTimerManager().ClearTimer(
+		ReacquireTargetTimer
+	);
 
 	if (!IsValid(BlackboardComponent))
 	{
 		return;
 	}
+
+	ABaseCharacter* PreviousTarget = Cast<ABaseCharacter>(
+		BlackboardComponent->GetValueAsObject(
+			TEXT("CombatTarget")
+		)
+	);
+
+	UnbindFromCombatTargetHealth(PreviousTarget);
 
 	StopMovement();
 
@@ -254,4 +344,209 @@ void ABaseAIController::StartReacquireTargetTimer()
 }
 
 
-		
+bool ABaseAIController::IsLivingCombatTarget(
+	ABaseCharacter* TargetCharacter
+) const
+{
+	if (!IsValid(TargetCharacter) ||
+		TargetCharacter == GetPawn())
+	{
+		return false;
+	}
+
+	const UHealthComponent* TargetHealth =
+		TargetCharacter->FindComponentByClass<UHealthComponent>();
+
+	return IsValid(TargetHealth) &&
+		!TargetHealth->IsDead();
+}
+
+void ABaseAIController::BindToCombatTargetHealth(
+	ABaseCharacter* TargetCharacter
+)
+{
+	if (!IsValid(TargetCharacter))
+	{
+		return;
+	}
+
+	if (UHealthComponent* TargetHealth =
+		TargetCharacter->FindComponentByClass<UHealthComponent>())
+	{
+		TargetHealth->OnHealthChanged.AddUniqueDynamic(
+			this,
+			&ABaseAIController::HandleCombatTargetHealthChanged
+		);
+	}
+}
+
+void ABaseAIController::UnbindFromCombatTargetHealth(
+	ABaseCharacter* TargetCharacter
+)
+{
+	if (!IsValid(TargetCharacter))
+	{
+		return;
+	}
+
+	if (UHealthComponent* TargetHealth =
+		TargetCharacter->FindComponentByClass<UHealthComponent>())
+	{
+		TargetHealth->OnHealthChanged.RemoveDynamic(
+			this,
+			&ABaseAIController::HandleCombatTargetHealthChanged
+		);
+	}
+}
+
+void ABaseAIController::HandleCombatTargetHealthChanged(
+	float CurrentHealth,
+	float MaxHealth,
+	ABaseCharacter* Attacker
+)
+{
+	if (CurrentHealth > 0.f ||
+		!IsValid(BlackboardComponent))
+	{
+		return;
+	}
+
+	ABaseCharacter* DeadTarget = Cast<ABaseCharacter>(
+		BlackboardComponent->GetValueAsObject(
+			TEXT("CombatTarget")
+		)
+	);
+
+	if (IsValid(AIPerception) && IsValid(DeadTarget))
+	{
+		AIPerception->ForgetActor(DeadTarget);
+	}
+
+	ClearCombatTargetBlackboardKey();
+	TrySelectVisibleLivingTarget();
+}
+
+bool ABaseAIController::TrySelectVisibleLivingTarget(
+	ABaseCharacter* ExcludedCharacter
+)
+{
+	if (!IsValid(AIPerception) ||
+		!IsValid(GetPawn()) ||
+		!IsValid(BlackboardComponent))
+	{
+		return false;
+	}
+
+	TArray<AActor*> VisibleActors;
+
+	AIPerception->GetCurrentlyPerceivedActors(
+		UAISense_Sight::StaticClass(),
+		VisibleActors
+	);
+
+	ABaseCharacter* BestTarget = nullptr;
+	float BestDistanceSquared = MAX_flt;
+
+	for (AActor* VisibleActor : VisibleActors)
+	{
+		ABaseCharacter* Candidate =
+			Cast<ABaseCharacter>(VisibleActor);
+
+		if (Candidate == ExcludedCharacter ||
+			!IsLivingCombatTarget(Candidate))
+		{
+			continue;
+		}
+
+		const float DistanceSquared =
+			FVector::DistSquared(
+				GetPawn()->GetActorLocation(),
+				Candidate->GetActorLocation()
+			);
+
+		if (DistanceSquared < BestDistanceSquared)
+		{
+			BestDistanceSquared = DistanceSquared;
+			BestTarget = Candidate;
+		}
+	}
+
+	if (!IsValid(BestTarget))
+	{
+		return false;
+	}
+
+	SetCombatTargetBlackboardKey(BestTarget);
+	SetCanSeeTargetBlackboardKey(true);
+
+	BlackboardComponent->ClearValue(
+		TEXT("MoveLocation")
+	);
+
+	return true;
+}
+
+void ABaseAIController::HandleDamageFromAttacker(
+	ABaseCharacter* Attacker
+)
+{
+	if (!IsValid(BlackboardComponent) ||
+		!IsLivingCombatTarget(Attacker))
+	{
+		return;
+	}
+
+	ABaseCharacter* CurrentTarget =
+		Cast<ABaseCharacter>(
+			BlackboardComponent->GetValueAsObject(
+				TEXT("CombatTarget")
+			)
+		);
+
+	// Stay committed while the current target is alive
+	// and actually visible through sight perception.
+	if (IsTargetCurrentlyVisible(CurrentTarget))
+	{
+		return;
+	}
+
+	// If anyone is currently visible, prefer the closest
+	// visible character over a hidden attacker.
+	if (TrySelectVisibleLivingTarget())
+	{
+		return;
+	}
+
+	// Nothing is visible. Pursue the known attacker, but do
+	// not authorize shooting until sight confirms visibility.
+	SetCombatTargetBlackboardKey(Attacker);
+	SetCanSeeTargetBlackboardKey(false);
+
+	SetMoveLocationBlackBoardKey(
+		Attacker->GetActorLocation()
+	);
+
+	TickUpdateMoveLocation = true;
+
+	StartReacquireTargetTimer();
+}
+
+bool ABaseAIController::IsTargetCurrentlyVisible(
+	ABaseCharacter* TargetCharacter
+) const
+{
+	if (!IsValid(AIPerception) ||
+		!IsLivingCombatTarget(TargetCharacter))
+	{
+		return false;
+	}
+
+	TArray<AActor*> VisibleActors;
+
+	AIPerception->GetCurrentlyPerceivedActors(
+		UAISense_Sight::StaticClass(),
+		VisibleActors
+	);
+
+	return VisibleActors.Contains(TargetCharacter);
+}

@@ -10,6 +10,7 @@ class UBehaviorTree;
 class UBlackboardComponent;
 class UBehaviorTreeComponent;
 class ABaseCharacter;
+class UHealthComponent;
 
 UCLASS()
 class TEMPLEFPS_API ABaseAIController : public AAIController
@@ -18,6 +19,11 @@ class TEMPLEFPS_API ABaseAIController : public AAIController
 
 public:
 	ABaseAIController();
+
+
+	void HandleDamageFromAttacker(
+		ABaseCharacter* Attacker
+	);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
 	void SetCombatTargetBlackboardKey(ABaseCharacter* TargetCharacter);
@@ -71,7 +77,32 @@ protected:
 	void HandleSightStimulus(AActor* Actor, FAIStimulus Stimulus /*Passing in a copy of the data  not a pointer or reference*/);
 
 	
+	bool IsLivingCombatTarget(
+		ABaseCharacter* TargetCharacter
+	) const;
 
+	void BindToCombatTargetHealth(
+		ABaseCharacter* TargetCharacter
+	);
+
+	void UnbindFromCombatTargetHealth(
+		ABaseCharacter* TargetCharacter
+	);
+
+	bool IsTargetCurrentlyVisible(
+		ABaseCharacter* TargetCharacter
+	) const;
+
+	bool TrySelectVisibleLivingTarget(
+		ABaseCharacter* ExcludedCharacter = nullptr
+	);
+
+	UFUNCTION()
+	void HandleCombatTargetHealthChanged(
+		float CurrentHealth,
+		float MaxHealth,
+		ABaseCharacter* Attacker
+	);
 
 
 private:

@@ -23,6 +23,11 @@ protected:
 
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
+	virtual EBTNodeResult::Type AbortTask(
+		UBehaviorTreeComponent& OwnerComp,
+		uint8* NodeMemory
+	) override;
+
 private:
 	ACharacter* GetCombatTarget(UBehaviorTreeComponent& OwnerComp) const;
 
@@ -34,6 +39,9 @@ private:
 
 	UHealthComponent* GetCurrentTargetHealthComponent(ACharacter* CurrentTarget) const;
 
+	void CleanupAttackState(
+		UBehaviorTreeComponent& OwnerComp
+	) const;
 
 	float GetYawDeltaToTarget(ABaseAICharacter* AICharacter, ACharacter* CurrentTarget) const;
 

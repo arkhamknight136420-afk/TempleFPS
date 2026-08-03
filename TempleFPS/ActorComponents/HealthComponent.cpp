@@ -75,16 +75,25 @@ void UHealthComponent::ApplyDamage(ABaseCharacter* Attacker, float InputDamageAm
 		Attacker
 	);
 
-	ABaseAICharacter* AIOwner = Cast<ABaseAICharacter>(GetOwner());
-
-	if (IsValid(AIOwner))
+	// A dying AI does not need to enter a new combat state.
+	if (!bJustDied)
 	{
-		ABaseAIController* AIController = Cast<ABaseAIController>(AIOwner->GetController());
+		ABaseAICharacter* AIOwner =
+			Cast<ABaseAICharacter>(GetOwner());
 
-		if (IsValid(AIController))
+		if (IsValid(AIOwner))
 		{
-			AIController->SetCombatTargetBlackboardKey(Attacker);
-			AIController->SetCanSeeTargetBlackboardKey(true);
+			ABaseAIController* AIController =
+				Cast<ABaseAIController>(
+					AIOwner->GetController()
+				);
+
+			if (IsValid(AIController))
+			{
+				AIController->HandleDamageFromAttacker(
+					Attacker
+				);
+			}
 		}
 	}
 

@@ -24,12 +24,25 @@ EBTNodeResult::Type UBTTask_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Ow
 	bool IsVisible = GetCanSeeTarget(OwnerComp);
 
 
-	if (!IsValid(AIController) || !IsValid(CurrentTarget) || !IsVisible)
+	if (!IsValid(AIController) ||
+		!IsValid(CurrentTarget) ||
+		!IsVisible)
 	{
+		CleanupAttackState(OwnerComp);
 		return EBTNodeResult::Failed;
 	}
 
 	return EBTNodeResult::InProgress;
+}
+
+EBTNodeResult::Type UBTTask_AttackPlayer::AbortTask(
+	UBehaviorTreeComponent& OwnerComp,
+	uint8* NodeMemory
+)
+{
+	CleanupAttackState(OwnerComp);
+
+	return EBTNodeResult::Aborted;
 }
 
 void UBTTask_AttackPlayer::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -42,11 +55,7 @@ void UBTTask_AttackPlayer::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
 	if (!IsValid(AIController) || !IsValid(AICharacter) || !IsValid(CurrentTarget) || !IsValid(CurrentTargetHealthComponent) || CurrentTargetHealthComponent->IsDead() || !IsVisible)
 	{
-		if (IsValid(AICharacter))
-		{
-			AICharacter->SetAimTarget(nullptr);
-			AICharacter->StopShooting();
-		}
+		CleanupAttackState(OwnerComp);
 
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
@@ -143,6 +152,18 @@ void UBTTask_AttackPlayer::UpdateShootingState(ABaseAICharacter* AICharacter, AC
 	}
 	else
 	{
+		AICharacter->StopShooting();
+	}
+}
+
+void UBTTask_AttackPlayer::CleanupAttackState(
+	UBehaviorTreeComponent& OwnerComp
+) const
+{
+	if (ABaseAICharacter* AICharacter =
+		GetAICharacter(OwnerComp))
+	{
+		AICharacter->SetAimTarget(nullptr);
 		AICharacter->StopShooting();
 	}
 }
