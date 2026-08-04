@@ -92,7 +92,7 @@ void UHealthComponent::ApplyDamage(ABaseCharacter* Attacker, float InputDamageAm
 			{
 				AIController->HandleDamageFromAttacker(
 					Attacker
-				);
+				); //j
 			}
 		}
 	}
