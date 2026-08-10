@@ -56,6 +56,16 @@ void ARemington870Weapon::FireOnce()
 		-1
 	);
 
+	if (AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner()))
+	{
+		if (AFPSPlayerController* PlayerController = Cast<AFPSPlayerController>(PlayerCharacter->GetController()))
+		{
+			PlayerController->StartRecoil(RecoilPitch, RecoilYaw, RecoilApplicationSpeedDegreesPerSecond);
+
+			UE_LOG(LogTemp, Log, TEXT("[WeaponBase] Apply recoil Called"))
+		}
+	}
+
 	bRoundChambered = false;
 	bCanFire = false;
 	IsShooting = true;

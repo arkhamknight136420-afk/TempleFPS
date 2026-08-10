@@ -97,7 +97,19 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool IsShooting = false;
 
+	//=====================================================
+	// RECOIL
+	//=====================================================
 
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil")
+	float RecoilYaw = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Recoil")
+	float RecoilPitch = 5.0f;;
+
+
+	
 	//=====================================================
 	// RELOADING
 	//=====================================================
@@ -294,6 +306,12 @@ protected:
 
 	FTimerHandle AmmoInsertTimerHandle;
 
+	//=====================================================
+	// RECOIL
+	//=====================================================
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil")
+	float RecoilApplicationSpeedDegreesPerSecond = 8.0f;
 
 	//=====================================================
 	// BULLET TRACING

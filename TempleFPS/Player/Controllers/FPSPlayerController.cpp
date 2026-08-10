@@ -8,6 +8,8 @@
 #include "../../UI/Actors/DamageNumberActor.h"
 #include "../../Inventory/Components/InventoryComponent.h"
 #include "../../Weapons/WeaponTypes/PrimaryWeapons/BarrettM82Weapon.h"
+#include "Kismet/GameplayStatics.h"
+
 
 
 
@@ -61,6 +63,44 @@ void AFPSPlayerController::BeginPlay()
 	{
 		PlayerCameraManager->ViewPitchMin = -50.0f;
 		PlayerCameraManager->ViewPitchMax = 50.0f;
+	}
+}
+
+void AFPSPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!bCanInterpolateRecoil)
+	{
+		return;
+	}
+
+	const FRotator PreviousRecoiledRotation = RecoiledRotation;
+
+	RecoiledRotation = FMath::RInterpConstantTo(
+		RecoiledRotation,
+		FRotator::ZeroRotator,
+		DeltaTime,
+		RecoilApplicationSpeedDegreesPerSecond
+	);
+
+	const FRotator RecoilAppliedThisFrame =
+		PreviousRecoiledRotation - RecoiledRotation;
+
+	FRotator NewControlRotation = GetControlRotation();
+
+	NewControlRotation.Pitch += RecoilAppliedThisFrame.Pitch;
+	NewControlRotation.Yaw += RecoilAppliedThisFrame.Yaw;
+
+	NewControlRotation.Yaw =
+		FRotator::NormalizeAxis(NewControlRotation.Yaw);
+
+	SetControlRotation(NewControlRotation);
+
+	if (RecoiledRotation.IsNearlyZero(0.001f))
+	{
+		RecoiledRotation = FRotator::ZeroRotator;
+		bCanInterpolateRecoil = false;
 	}
 }
 
@@ -452,4 +492,14 @@ void AFPSPlayerController::ShowDamageNumber(
 		DamageAmount,
 		DamageNumberType
 	);
+}
+
+void AFPSPlayerController::StartRecoil(float Pitch, float Yaw , float RotationSpeed)
+{
+	RecoiledRotation.Pitch += Pitch;
+	RecoiledRotation.Yaw += Yaw;
+
+	RecoilApplicationSpeedDegreesPerSecond = RotationSpeed;
+	
+	bCanInterpolateRecoil = true;
 }

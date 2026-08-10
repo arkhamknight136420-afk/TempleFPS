@@ -22,12 +22,18 @@ class TEMPLEFPS_API  AFPSPlayerController : public APlayerController
 
 public: 
 
+	virtual void Tick(float DeltaTime) override;
+
 	void ShowDamageNumber(
 		float DamageAmount,
 		EDamageNumberType DamageNumberType,
 		const FVector& WorldLocation
-	);
+	);		
 
+	UFUNCTION(BlueprintCallable, Category = "Recoil")
+	void StartRecoil(float Pitch, float Yaw ,float RotationSpeed);
+
+	bool bCanInterpolateRecoil = false;
 protected:
 
 	//Brain Reference
@@ -74,6 +80,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|Sensitivity")
 	float ADSSniperVerticalSensitivityMultiplier = .1f;
 
+	
+
+	
 
 
 	// Movement
@@ -115,6 +124,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	AFPSPlayerCharacter* AFPSPlayerCharacterRef;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recoil")
+	float RecoilApplicationSpeedDegreesPerSecond = 8.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recoil")
+
+	FRotator RecoiledRotation = FRotator::ZeroRotator;
 
 	virtual void OnPossess(APawn* InPawn) override;
 

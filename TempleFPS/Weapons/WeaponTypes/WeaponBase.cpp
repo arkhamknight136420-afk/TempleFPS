@@ -60,11 +60,11 @@ void AWeaponBase::StartWeaponDestructionTimer()
 {
 	SetLifeSpan(20.f);
 }
+
 void AWeaponBase::ClearWeaponDestructionTimer()
 {
 	SetLifeSpan(0.f);
 }
-
 
 	//=====================================================
 	// INTERACTION
@@ -171,6 +171,17 @@ void AWeaponBase::FireOnce()
 		MagazineSize,
 		-1
 	);
+
+	if (AFPSPlayerCharacter* PlayerCharacter = Cast<AFPSPlayerCharacter>(GetOwner()))
+	{
+		if (AFPSPlayerController* PlayerController = Cast<AFPSPlayerController>(PlayerCharacter->GetController()))
+		{
+			PlayerController->StartRecoil(RecoilPitch, RecoilYaw, RecoilApplicationSpeedDegreesPerSecond);
+
+			UE_LOG(LogTemp,Log,TEXT("[WeaponBase] Apply recoil Called"))
+		}
+	}
+
 
 	bCanFire = false;
 	IsShooting = true;
@@ -376,8 +387,6 @@ int32 AWeaponBase::AddAmmo(int32 AdditionalAmmo)
 	UGameplayStatics::PlaySound2D(GetWorld(), AmmoAddedSound);
 	return ActualAmmoAdded;
 }
-
-
 
 	//=====================================================
 	// BULLET TRACING
@@ -730,7 +739,6 @@ void AWeaponBase::PlayHitSound(EDamageNumberType DamageNumberType)
 
 	UGameplayStatics::PlaySound2D(GetWorld(), HitSoundEffect);
 }
-
 
 	//=====================================================
 	// VFX
