@@ -386,7 +386,7 @@ void ABaseAIController::UnbindFromCombatTargetHealth(
 {
 	if (!IsValid(TargetCharacter))
 	{
-		return;
+		return; //s
 	}
 
 	if (UHealthComponent* TargetHealth =
